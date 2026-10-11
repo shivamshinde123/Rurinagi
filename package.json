@@ -1,7 +1,7 @@
 {
   "name": "rurinagi",
   "productName": "Rurinagi",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A calm, private Windows focus and planning app.",
   "author": "Shivam D Shinde",
   "main": ".vite/build/main.cjs",

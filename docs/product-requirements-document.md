@@ -1,8 +1,8 @@
-# Rurinagi V1 product requirements
+# Rurinagi V2 product requirements
 
 ## Goal
 
-Rurinagi helps one person answer “What should I work on now?” without an account or network connection. V1 proves a complete daily loop: capture, plan, focus, pause or recover, finish, and review.
+Rurinagi helps one person answer “What should I work on now?” without an account or network connection. V2 preserves the complete daily loop and makes the app easier to keep available, read, and operate from Windows.
 
 ## Users
 
@@ -14,8 +14,11 @@ The primary user is an individual Windows user managing personal work such as jo
 - Tasks supports create, edit, complete, reopen, archive, reorder, project assignment, priority, date, description, and session estimate.
 - Focus shows one task, remaining time, a scratchpad, essential controls, completion, and breaks.
 - Quick Capture opens from a global shortcut and saves to the inbox with immediate keyboard focus.
+- The shortcut is shown in familiar Windows notation while its portable Electron accelerator remains valid internally.
 - History lists completed, partial, and interrupted sessions with notes.
 - Settings controls timer durations, break behavior, notifications, theme, reduced motion, startup behavior, backup, import, export, and deletion.
+- Closing the main window keeps Rurinagi available in the system tray, whose menu can restore the app, open Quick Capture, or quit.
+- The app uses the product website's green visual identity and keeps project metadata clearly spaced.
 
 ## Acceptance criteria
 
@@ -26,8 +29,9 @@ The primary user is an individual Windows user managing personal work such as jo
 - Primary workflows are keyboard navigable with visible focus.
 - Reduced-motion mode removes nonessential movement.
 - Local exports can be restored after validation.
+- The system tray can restore a hidden main window and offers an explicit Quit command.
 
 ## Out of scope
 
-Spotify, calendar, weather, tray controls, detailed analytics, Focus Skyline, AI, accounts, collaboration, surveillance, and automatic closing of other applications.
+Spotify, calendar, weather, detailed analytics, Focus Skyline, AI, accounts, collaboration, surveillance, and automatic closing of other applications.
 

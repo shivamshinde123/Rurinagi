@@ -1,6 +1,6 @@
 # Environment and configuration reference
 
-Rurinagi V1 requires no secrets and no runtime network configuration.
+Rurinagi V2 requires no secrets and no runtime network configuration.
 
 | Setting | Default | Purpose |
 | --- | --- | --- |

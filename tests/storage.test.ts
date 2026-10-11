@@ -16,10 +16,12 @@ test('SQLite persistence, export, import, backup, and clear form a lossless roun
   try {
     openStorage(database);
     const state = loadState();
+    state.projects[0]!.color = '#456FAE';
     state.quickNote = 'Durable release check';
     state.settings.theme = 'dark';
     saveState(state);
     assert.equal(loadState().quickNote, 'Durable release check');
+    assert.equal(loadState().projects[0]!.color, '#315F4D');
 
     exportState(exported);
     backupDatabase(database, backup);

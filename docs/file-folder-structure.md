@@ -7,11 +7,11 @@ Rurinagi/
     main/                  Privileged Electron process and storage
     preload/               Narrow renderer bridge
     renderer/
-      app.tsx               State coordinator, V1 screens, and small shared components
+      app.tsx               State coordinator, V2 screens, and small shared components
       styles.css            Tokens, layout, states, and accessibility
       main.tsx              React entry point
     shared/
-      domain.ts             Shared V1 domain model and timer logic
+      domain.ts             Shared state model and timer logic
   tests/                   Pure domain behavior tests
     e2e/                   Packaged Electron workflow coverage
   site/                    Static GitHub Pages product site

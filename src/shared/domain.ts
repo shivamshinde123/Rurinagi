@@ -101,7 +101,7 @@ export function createEmptyState(): AppState {
   return {
     version: 1,
     projects: [
-      { id: 'project-career', name: 'Career', color: '#456FAE' },
+      { id: 'project-career', name: 'Career', color: '#315F4D' },
       { id: 'project-rurinagi', name: 'Rurinagi', color: '#7A67B7' },
       { id: 'project-learning', name: 'Learning', color: '#4B8B72' },
     ],

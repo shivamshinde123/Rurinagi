@@ -145,7 +145,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
     event.preventDefault();
     const name = projectName.trim();
     if (!name) return;
-    commit({ ...state, projects: [...state.projects, { id: crypto.randomUUID(), name: name.slice(0, 120), color: '#456FAE' }] }, 'Project created');
+    commit({ ...state, projects: [...state.projects, { id: crypto.randomUUID(), name: name.slice(0, 120), color: '#315F4D' }] }, 'Project created');
     setProjectName(''); setCreatingProject(false);
   };
   const update = (patch: Partial<Task>) => selected && commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, ...patch } : task) });
@@ -251,9 +251,9 @@ function SettingsScreen({ state, commit, setToast }: { state: AppState; commit: 
     <div className="settings-stack">
       <SettingsGroup title="Timer"><SettingNumber label="Focus duration" value={state.settings.focusMinutes} suffix="min" onChange={(value) => update({ focusMinutes: value })} /><SettingNumber label="Short break" value={state.settings.shortBreakMinutes} suffix="min" onChange={(value) => update({ shortBreakMinutes: value })} /><SettingNumber label="Long break" value={state.settings.longBreakMinutes} suffix="min" onChange={(value) => update({ longBreakMinutes: value })} /><SettingNumber label="Sessions before long break" value={state.settings.sessionsBeforeLongBreak} onChange={(value) => update({ sessionsBeforeLongBreak: value })} /><SettingToggle label="Start breaks automatically" checked={state.settings.autoStartBreaks} onChange={(checked) => update({ autoStartBreaks: checked })} /><SettingToggle label="Desktop notifications" checked={state.settings.notifications} onChange={(checked) => update({ notifications: checked })} /><SettingToggle label="Completion sound" checked={state.settings.sound} onChange={(checked) => update({ sound: checked })} /></SettingsGroup>
       <SettingsGroup title="Appearance"><div className="setting-row"><div><strong>Theme</strong><small>Match your workspace.</small></div><select aria-label="Theme" value={state.settings.theme} onChange={(event) => update({ theme: event.target.value as Settings['theme'] })}><option value="system">Follow system</option><option value="light">Light</option><option value="dark">Dark</option></select></div><SettingToggle label="Reduce motion" checked={state.settings.reducedMotion} onChange={(checked) => update({ reducedMotion: checked })} /><SettingToggle label="Compact density" checked={state.settings.compactDensity} onChange={(checked) => update({ compactDensity: checked })} /></SettingsGroup>
-      <SettingsGroup title="Behavior"><SettingToggle label="Start with Windows" checked={state.settings.startWithWindows} onChange={(checked) => update({ startWithWindows: checked })} /><SettingToggle label="Confirm before discarding a session" checked={state.settings.confirmDiscard} onChange={(checked) => update({ confirmDiscard: checked })} /><div className="setting-row"><div><strong>Quick capture shortcut</strong><small>Works while Rurinagi is running.</small></div><input aria-label="Quick capture shortcut" value={state.settings.quickCaptureShortcut} onChange={(event) => update({ quickCaptureShortcut: event.target.value })} /></div></SettingsGroup>
+      <SettingsGroup title="Behavior"><SettingToggle label="Start with Windows" checked={state.settings.startWithWindows} onChange={(checked) => update({ startWithWindows: checked })} /><SettingToggle label="Confirm before discarding a session" checked={state.settings.confirmDiscard} onChange={(checked) => update({ confirmDiscard: checked })} /><ShortcutInput value={state.settings.quickCaptureShortcut} onChange={(quickCaptureShortcut) => update({ quickCaptureShortcut })} /></SettingsGroup>
       <SettingsGroup title="Data and privacy"><p className="privacy-copy">Your tasks and focus history are stored locally on this device.</p><div className="data-actions"><button className="button secondary" onClick={() => void action('export')}>Export data</button><button className="button secondary" onClick={() => void action('import')}>Import data</button><button className="button secondary" onClick={() => void action('backup')}>Back up database</button></div><button className="button destructive quiet" onClick={async () => { if (confirm('Clear every task and session? This cannot be undone.')) commit(await window.rurinagi.clearData(), 'All local data cleared'); }}>Clear all data</button></SettingsGroup>
-      <SettingsGroup title="About"><div className="about-row"><Logo /><div><strong>Rurinagi</strong><small>Version 1.0.0 · Private by design</small></div></div></SettingsGroup>
+      <SettingsGroup title="About"><div className="about-row"><Logo /><div><strong>Rurinagi</strong><small>Version 2.0.0 · Private by design</small></div></div></SettingsGroup>
     </div>
   </>;
 }
@@ -270,7 +270,7 @@ function QuickCapture({ state, commit }: { state: AppState; commit: Commit }) {
 
 function TaskRow({ task, state, selected, onToggle, onOpen }: { task: Task; state: AppState; selected?: boolean; onToggle: () => void; onOpen?: () => void }) {
   const project = projectFor(state, task.projectId); const complete = task.status === 'complete'; const overdue = task.dueDate ? task.dueDate < localDate() && !complete : false;
-  return <div className={`task-row ${selected ? 'selected' : ''} ${complete ? 'done' : ''}`}><button className="checkbox" aria-label={complete ? `Reopen ${task.title}` : `Complete ${task.title}`} aria-pressed={complete} onClick={onToggle}>{complete && <Icon name="check" />}</button><button className="task-content" onClick={onOpen}><span>{task.title}</span><small>{project && <><ProjectDot project={project} />{project.name}</>}{task.estimateSessions > 0 && ` · ${task.estimateSessions * state.settings.focusMinutes} min`}{overdue && <b className="overdue"> · Overdue</b>}</small></button></div>;
+  return <div className={`task-row ${selected ? 'selected' : ''} ${complete ? 'done' : ''}`}><button className="checkbox" aria-label={complete ? `Reopen ${task.title}` : `Complete ${task.title}`} aria-pressed={complete} onClick={onToggle}>{complete && <Icon name="check" />}</button><button className="task-content" onClick={onOpen}><span>{task.title}</span><small>{project && <span className="project-label"><ProjectDot project={project} /><span>{project.name}</span></span>}{task.estimateSessions > 0 && ` · ${task.estimateSessions * state.settings.focusMinutes} min`}{overdue && <b className="overdue"> · Overdue</b>}</small></button></div>;
 }
 
 function SessionRow({ session, state, selected, onClick }: { session: Session; state: AppState; selected: boolean; onClick: () => void }) {
@@ -296,6 +296,16 @@ function Field({ label, children }: { label: string; children: ReactNode }) { re
 function SettingsGroup({ title, children }: { title: string; children: ReactNode }) { return <section className="settings-group"><h2>{title}</h2><div className="card">{children}</div></section>; }
 function SettingToggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) { return <label className="setting-row"><div><strong>{label}</strong></div><span className="toggle"><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span /></span></label>; }
 function SettingNumber({ label, value, suffix, onChange }: { label: string; value: number; suffix?: string; onChange: (value: number) => void }) { return <label className="setting-row"><div><strong>{label}</strong></div><span className="number-setting"><input type="number" min="1" max="120" value={value} onChange={(event) => onChange(boundedInt(event.target.value, 1, 120))} />{suffix && <small>{suffix}</small>}</span></label>; }
+function ShortcutInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [draft, setDraft] = useState(formatShortcut(value));
+  useEffect(() => setDraft(formatShortcut(value)), [value]);
+  const commit = (): void => {
+    const shortcut = parseShortcut(draft);
+    setDraft(formatShortcut(shortcut));
+    onChange(shortcut);
+  };
+  return <div className="setting-row"><div><strong>Quick capture shortcut</strong><small>Works while Rurinagi is running.</small></div><input aria-label="Quick capture shortcut" value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }} /></div>;
+}
 function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) { return <div className="scrim" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><h2 id="modal-title">{title}</h2>{children}</div></div>; }
 function ProjectDot({ project }: { project?: Project }) { return <span className="project-dot" style={{ background: project?.color ?? '#9A9AA1' }} />; }
 function Logo() { return <span className="logo" aria-label="Rurinagi"><svg viewBox="0 0 36 36" role="img"><path d="M7 19c4-7 8-9 12-5 4 4 6 3 10-2" /><path d="M7 24c5-4 9-4 13-1 3 2 6 1 9-2" /></svg></span>; }
@@ -318,6 +328,8 @@ function taskById(state: AppState, id: string | null): Task | undefined { return
 function humanMinutes(seconds: number): string { const minutes = Math.round(seconds / 60); return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`; }
 function focusDuration(seconds: number): string { return seconds < 60 ? 'Less than 1m' : humanMinutes(seconds); }
 function boundedInt(value: string, min: number, max: number): number { return Math.min(max, Math.max(min, Number.parseInt(value, 10) || min)); }
+function formatShortcut(value: string): string { return value.replace(/CommandOrControl|CmdOrCtrl|Control|Ctrl/gi, 'Ctrl').replace(/\s*\+\s*/g, ' + '); }
+function parseShortcut(value: string): string { return value.trim().replace(/\s*\+\s*/g, '+').replace(/^Ctrl(?=\+)/i, 'CommandOrControl'); }
 function formatDay(day: string): string { const date = new Date(`${day}T12:00:00`); return date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); }
 function message(cause: unknown): string { return cause instanceof Error ? cause.message : String(cause); }
 function playChime(): void {

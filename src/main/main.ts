@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Notification } from 'electron';
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeImage, Notification, Tray } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { AppState } from '../shared/domain';
@@ -9,6 +9,7 @@ if (started) app.quit();
 const databasePath = path.join(app.getPath('userData'), 'rurinagi.sqlite');
 let mainWindow: BrowserWindow | null = null;
 let captureWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
 let activeShortcut = '';
 let isQuitting = false;
 
@@ -42,6 +43,12 @@ function createMainWindow(): void {
     webPreferences: browserPreferences(),
   });
   mainWindow.once('ready-to-show', () => mainWindow?.show());
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow?.hide();
+    }
+  });
   mainWindow.on('closed', () => {
     mainWindow = null;
     captureWindow?.destroy();
@@ -51,6 +58,26 @@ function createMainWindow(): void {
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
   loadRenderer(mainWindow);
+}
+
+function showMainWindow(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) createMainWindow();
+  mainWindow?.show();
+  mainWindow?.focus();
+}
+
+function createTray(): void {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#315f4d"/><path d="M6 17c4-7 8-9 12-5 4 4 6 3 9-2M6 22c5-4 9-4 13-1 3 2 5 1 8-2" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round"/></svg>';
+  const icon = nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`).resize({ width: 16, height: 16 });
+  tray = new Tray(icon);
+  tray.setToolTip('Rurinagi');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'Show Rurinagi', click: showMainWindow },
+    { label: 'Quick capture', click: openCapture },
+    { type: 'separator' },
+    { label: 'Quit', click: () => { isQuitting = true; app.quit(); } },
+  ]));
+  tray.on('double-click', showMainWindow);
 }
 
 function openCapture(): void {
@@ -128,11 +155,12 @@ app.whenReady().then(() => {
   openStorage(databasePath);
   registerIpc();
   createMainWindow();
+  createTray();
   applySystemSettings(loadState());
-  app.on('activate', () => { if (!mainWindow) createMainWindow(); });
+  app.on('activate', showMainWindow);
 });
 
 app.on('before-quit', () => { isQuitting = true; });
-app.on('will-quit', () => { globalShortcut.unregisterAll(); closeStorage(); });
+app.on('will-quit', () => { tray?.destroy(); tray = null; globalShortcut.unregisterAll(); closeStorage(); });
 app.on('window-all-closed', () => app.quit());
 
