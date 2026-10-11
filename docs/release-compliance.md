@@ -19,11 +19,11 @@ Reviewed October 11, 2026 for the local-only Windows desktop application and sta
 | Email unsubscribe | Not applicable | No email or newsletter system exists. |
 | Licensed assets | Implemented | System fonts and original project artwork; open-source runtime licenses documented and packaged. |
 | Data access/export/deletion | Implemented | Local JSON export, database backup, task/session deletion, and confirmed Clear all data. Policy explains that uninstall may leave user data and recommends clearing first. |
-| Installer identity/signing | Action required | Squirrel installs shortcuts and launches the app, but the public executable remains unsigned until publisher signing credentials are available. |
+| Installer identity/signing | Accepted risk for current release | Squirrel installs shortcuts and launches the app. V3 is intentionally unsigned for personal and trusted-user distribution; the website, README, and release notes disclose SmartScreen/Unknown publisher behavior and publish SHA-256 checksums. |
 
-## Release blockers
+## Release follow-ups
 
-- Obtain and configure a Windows code-signing certificate before representing the installer as trusted or fully production-ready.
+- Obtain and configure a Windows code-signing certificate before broad or commercial distribution, and never represent the current installer as having a verified publisher identity.
 - Complete a manual Windows screen-reader pass for the first-run setup and essential workflows.
 
 ## Recheck triggers

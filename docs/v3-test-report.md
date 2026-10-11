@@ -28,4 +28,4 @@ Version: `3.0.0`
 
 SHA-256 values are stored in `docs/release-checksums-v3.0.0.txt`.
 
-The artifacts include the Rurinagi logo and third-party notices. The installer is currently unsigned; Windows code signing remains a release-readiness action requiring publisher credentials.
+The artifacts include the Rurinagi logo and third-party notices. The installer is intentionally unsigned for this personal and trusted-user release. SmartScreen and `Unknown publisher` behavior are disclosed on the website, in the README, and in the release notes; code signing remains a follow-up before broad or commercial distribution.
