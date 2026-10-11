@@ -36,10 +36,14 @@ function browserPreferences(): Electron.WebPreferences {
   };
 }
 
+function appIconPath(): string {
+  return app.isPackaged ? path.join(process.resourcesPath, 'rurinagi-logo.png') : path.join(app.getAppPath(), 'resources', 'rurinagi-logo.png');
+}
+
 function createMainWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1440, height: 900, minWidth: 980, minHeight: 680,
-    title: 'Rurinagi', backgroundColor: '#F5F5F7', show: false,
+    title: 'Rurinagi', icon: appIconPath(), backgroundColor: '#F5F5F7', show: false,
     webPreferences: browserPreferences(),
   });
   mainWindow.once('ready-to-show', () => mainWindow?.show());
@@ -67,8 +71,7 @@ function showMainWindow(): void {
 }
 
 function createTray(): void {
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#315f4d"/><path d="M6 17c4-7 8-9 12-5 4 4 6 3 9-2M6 22c5-4 9-4 13-1 3 2 5 1 8-2" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round"/></svg>';
-  const icon = nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`).resize({ width: 16, height: 16 });
+  const icon = nativeImage.createFromPath(appIconPath()).resize({ width: 16, height: 16 });
   tray = new Tray(icon);
   tray.setToolTip('Rurinagi');
   tray.setContextMenu(Menu.buildFromTemplate([
@@ -85,7 +88,7 @@ function openCapture(): void {
     captureWindow = new BrowserWindow({
       width: 560, height: 390, minWidth: 480, minHeight: 340,
       title: 'Quick capture — Rurinagi', resizable: true,
-      skipTaskbar: true, show: false, backgroundColor: '#F5F5F7',
+      icon: appIconPath(), skipTaskbar: true, show: false, backgroundColor: '#F5F5F7',
       webPreferences: browserPreferences(),
     });
     captureWindow.on('close', (event) => {

@@ -3,6 +3,8 @@
 ```text
 Rurinagi/
   docs/                    Project specifications and decisions
+  resources/               Master SVG, PNG, and Windows ICO brand assets
+  scripts/                 Reproducible development asset generation
   src/
     main/                  Privileged Electron process and storage
     preload/               Narrow renderer bridge

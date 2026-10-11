@@ -20,6 +20,8 @@
 
 The sidebar is a translucent structural layer. Content cards stay solid for legibility. On narrow windows, navigation becomes a bottom bar and secondary columns stack.
 
+The brand mark is two calm current lines inside a green rounded square. It must remain recognizable at 16 px, contain no text, and use the same silhouette in the app, taskbar, tray, installer, and website favicon.
+
 ## Today
 
 ```text

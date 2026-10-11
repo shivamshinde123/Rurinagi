@@ -465,7 +465,7 @@ function CalendarControl({ ariaLabel, value, onChange }: { ariaLabel: string; va
   </div>;
 }
 function ProjectDot({ project }: { project?: Project }) { return <span className="project-dot" style={{ background: project?.color ?? '#9A9AA1' }} />; }
-function Logo() { return <span className="logo" aria-label="Rurinagi"><svg viewBox="0 0 36 36" role="img"><path d="M7 19c4-7 8-9 12-5 4 4 6 3 10-2" /><path d="M7 24c5-4 9-4 13-1 3 2 6 1 9-2" /></svg></span>; }
+function Logo() { return <span className="logo" aria-label="Rurinagi"><svg viewBox="0 0 512 512" role="img"><path d="M96 257c64-106 129-128 185-63 58 67 105 39 151-40" /><path className="logo-current" d="M96 358c79-65 145-64 200-17 50 42 94 24 136-22" /></svg></span>; }
 
 type IconName = 'sun' | 'check' | 'timer' | 'history' | 'insights' | 'settings' | 'plus' | 'search' | 'more' | 'play' | 'calendar';
 function Icon({ name }: { name: IconName }) {

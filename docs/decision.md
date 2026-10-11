@@ -54,3 +54,7 @@ Windows renders `input[type="date"]` with operating-system chrome that conflicts
 
 V3 adds one pure `buildFocusInsights` function and one Insights screen. A rolling seven-day Focus Skyline, previous-period comparison, project distribution, completion rate, and streaks are calculated when session history changes. This keeps the schema at version 1, avoids a chart dependency and migration, and preserves the product's offline privacy boundary. Relational normalization remains unnecessary at the current data volume.
 
+## 2026-10-11 Establish one scalable Rurinagi logo
+
+The existing two-wave motif becomes the formal Rurinagi mark: two calm currents on the established green gradient. One SVG is the editable source, while a small script using the already-installed Playwright tooling produces a 512 px PNG and a seven-size Windows ICO. The same geometry now appears in the renderer, website favicon, application windows, tray, executable, and installer without adding a graphics dependency.
+

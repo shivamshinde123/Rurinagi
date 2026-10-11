@@ -22,6 +22,7 @@ The primary user is an individual Windows user managing personal work such as jo
 - Settings controls timer durations, break behavior, notifications, theme, reduced motion, startup behavior, backup, import, export, and deletion.
 - Closing the main window keeps Rurinagi available in the system tray, whose menu can restore the app, open Quick Capture, or quit.
 - The app uses the product website's green visual identity and keeps project metadata clearly spaced.
+- The Rurinagi two-current logo appears consistently in the app, Windows executable and installer, taskbar, tray, and website favicon.
 - Task creation and focus initiation have distinct visual hierarchy, task edits use an explicit Update task action, and dropdown and calendar controls match the application theme.
 
 ## Acceptance criteria
