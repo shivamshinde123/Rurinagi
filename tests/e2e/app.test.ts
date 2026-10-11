@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -8,6 +9,7 @@ import { _electron as electron, ElectronApplication, Page } from 'playwright';
 const root = process.cwd();
 const electronPath = join(root, 'node_modules', 'electron', 'dist', 'electron.exe');
 const mainPath = join(root, '.vite', 'build', 'main.cjs');
+const packagedExe = join(root, 'out', 'Rurinagi-win32-x64', 'Rurinagi.exe');
 
 test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, async () => {
   mkdirSync(join(root, 'output', 'playwright'), { recursive: true });
@@ -244,7 +246,33 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
     assert.deepEqual(errors, []);
   } finally {
     if (app) await quit(app);
-    rmSync(profile, { recursive: true, force: true });
+    await removeDirectory(profile);
+  }
+});
+
+test('packaged Windows executable reopens the existing Rurinagi window', { timeout: 60_000 }, async () => {
+  const profile = mkdtempSync(join(tmpdir(), 'rurinagi-packaged-e2e-'));
+  let primaryProcess: ReturnType<typeof spawn> | undefined;
+  let secondProcess: ReturnType<typeof spawn> | undefined;
+
+  try {
+    assert.equal(existsSync(packagedExe), true, 'packaged Rurinagi executable exists');
+    primaryProcess = spawn(packagedExe, [`--user-data-dir=${profile}`], { env: electronEnvironment(), stdio: 'ignore' });
+    assert.ok(primaryProcess.pid);
+    await waitForProcessTitle(primaryProcess.pid, 'Rurinagi');
+    assert.equal(execFileSync('powershell.exe', ['-NoProfile', '-Command', `(Get-Process -Id ${primaryProcess.pid} -ErrorAction Stop).CloseMainWindow()`], { encoding: 'utf8' }).trim(), 'True');
+    await waitForProcessTitle(primaryProcess.pid, '');
+
+    secondProcess = spawn(packagedExe, [`--user-data-dir=${profile}`], { env: electronEnvironment(), stdio: 'ignore' });
+    const secondExit = waitForExit(secondProcess);
+    await waitForProcessTitle(primaryProcess.pid, 'Rurinagi');
+    assert.equal(await secondExit, 0);
+  } finally {
+    if (secondProcess && secondProcess.exitCode === null) secondProcess.kill();
+    if (primaryProcess?.pid && primaryProcess.exitCode === null) {
+      try { execFileSync('taskkill.exe', ['/PID', String(primaryProcess.pid), '/T', '/F'], { stdio: 'ignore' }); } catch { /* process already exited */ }
+    }
+    await removeDirectory(profile);
   }
 });
 
@@ -254,12 +282,48 @@ async function quit(app: ElectronApplication): Promise<void> {
 }
 
 async function launch(profile: string, errors: string[]): Promise<{ app: ElectronApplication; page: Page }> {
-  const env = Object.fromEntries(Object.entries(process.env).filter(([key, value]) => key !== 'ELECTRON_RUN_AS_NODE' && value !== undefined)) as Record<string, string>;
-  const app = await electron.launch({ executablePath: electronPath, args: [mainPath, `--user-data-dir=${profile}`], env });
+  const app = await electron.launch({ executablePath: electronPath, args: [mainPath, `--user-data-dir=${profile}`], env: electronEnvironment() });
   const page = await app.firstWindow();
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
   page.on('console', (message) => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
   return { app, page };
+}
+
+function electronEnvironment(): Record<string, string> {
+  return Object.fromEntries(Object.entries(process.env).filter(([key, value]) => key !== 'ELECTRON_RUN_AS_NODE' && value !== undefined)) as Record<string, string>;
+}
+
+async function waitForProcessTitle(processId: number, expected: string): Promise<void> {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    try {
+      const title = execFileSync('powershell.exe', ['-NoProfile', '-Command', `(Get-Process -Id ${processId} -ErrorAction Stop).MainWindowTitle`], { encoding: 'utf8' }).trim();
+      if (title === expected) return;
+    } catch { /* process may still be starting */ }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  assert.fail(`Rurinagi window title did not become ${JSON.stringify(expected)}`);
+}
+
+function waitForExit(process: ReturnType<typeof spawn>): Promise<number | null> {
+  return new Promise((resolve, reject) => {
+    if (process.exitCode !== null) { resolve(process.exitCode); return; }
+    const timer = setTimeout(() => reject(new Error('Second Rurinagi process did not exit')), 5_000);
+    process.once('error', (error) => { clearTimeout(timer); reject(error); });
+    process.once('exit', (code) => { clearTimeout(timer); resolve(code); });
+  });
+}
+
+async function removeDirectory(path: string): Promise<void> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    try {
+      rmSync(path, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (!['EBUSY', 'EPERM'].includes((error as NodeJS.ErrnoException).code ?? '')) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+  rmSync(path, { recursive: true, force: true });
 }
 
 async function ready(page: Page): Promise<void> {
