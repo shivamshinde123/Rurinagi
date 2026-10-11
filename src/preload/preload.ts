@@ -10,6 +10,7 @@ export interface RurinagiApi {
   clearData(): Promise<AppState>;
   openCapture(): Promise<void>;
   completeCapture(): Promise<void>;
+  openExternal(url: string): Promise<void>;
   notify(title: string, body: string): Promise<void>;
   onStateChanged(callback: () => void): () => void;
 }
@@ -23,6 +24,7 @@ const api: RurinagiApi = {
   clearData: () => ipcRenderer.invoke('data:clear') as Promise<AppState>,
   openCapture: () => ipcRenderer.invoke('capture:open') as Promise<void>,
   completeCapture: () => ipcRenderer.invoke('capture:complete') as Promise<void>,
+  openExternal: (url) => ipcRenderer.invoke('external:open', url) as Promise<void>,
   notify: (title, body) => ipcRenderer.invoke('notify', title, body) as Promise<void>,
   onStateChanged: (callback) => {
     const listener = (): void => callback();

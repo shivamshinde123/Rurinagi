@@ -24,6 +24,8 @@ The primary user is an individual Windows user managing personal work such as jo
 - The app uses the product website's green visual identity and keeps project metadata clearly spaced.
 - The Rurinagi two-current logo appears consistently in the app, Windows executable and installer, taskbar, tray, and website favicon.
 - Task creation and focus initiation have distinct visual hierarchy, task edits use an explicit Update task action, and dropdown and calendar controls match the application theme.
+- First launch presents a concise setup experience explaining local storage and asking separately about notifications and Windows startup; both optional choices default off.
+- Full Privacy Policy and Terms are available from first-run setup, Settings, and the public website.
 
 ## Acceptance criteria
 
@@ -41,6 +43,7 @@ The primary user is an individual Windows user managing personal work such as jo
 - The task inspector is absent until a task is selected or created; Update task saves the draft and closes it.
 - Planned dates use the app-rendered calendar in Task Details and Quick Capture, with month navigation, Today, Clear, keyboard navigation, and local `YYYY-MM-DD` storage.
 - Insights are calculated from existing local session history, render seven accessible day values, and require no account, upload, or new persistence fields.
+- Finishing first-run setup persists both choices, reaches Today immediately, and does not reappear on ordinary restarts.
 
 ## Out of scope
 

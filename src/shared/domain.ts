@@ -87,13 +87,28 @@ export interface FocusInsights {
   projects: ProjectFocus[];
 }
 
+export const policyUrls = {
+  privacy: 'https://shivamshinde123.github.io/Rurinagi/privacy.html',
+  terms: 'https://shivamshinde123.github.io/Rurinagi/terms.html',
+} as const;
+
+export function isAllowedPolicyUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return !url.username && !url.password && Object.values(policyUrls).includes(`${url.origin}${url.pathname}` as typeof policyUrls[keyof typeof policyUrls]);
+  } catch {
+    return false;
+  }
+}
+
 export const defaultSettings: Settings = {
   focusMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   sessionsBeforeLongBreak: 4,
   autoStartBreaks: false,
-  notifications: true,
+  notifications: false,
   sound: false,
   theme: 'system',
   reducedMotion: false,

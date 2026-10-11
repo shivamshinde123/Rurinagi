@@ -20,7 +20,18 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
   try {
     ({ app } = await launch(profile, errors));
     let page = await app.firstWindow();
+    await page.getByRole('heading', { name: 'A calmer place for meaningful work.' }).waitFor();
+    await page.getByRole('button', { name: 'Privacy Policy' }).waitFor();
+    await page.getByRole('button', { name: 'Terms of Service' }).waitFor();
+    await page.screenshot({ path: join(root, 'output', 'playwright', 'first-run-setup.png'), fullPage: true });
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.screenshot({ path: join(root, 'output', 'playwright', 'first-run-preferences.png'), fullPage: true });
+    assert.equal(await page.getByLabel('Desktop notifications').isChecked(), false);
+    assert.equal(await page.getByLabel('Start with Windows').isChecked(), false);
+    await page.getByLabel('Desktop notifications').check();
+    await page.getByRole('button', { name: 'Finish setup' }).click();
     await ready(page);
+    assert.equal((await page.evaluate(() => window.rurinagi.loadState())).settings.notifications, true);
 
     for (const screen of ['Today', 'Tasks', 'Focus', 'History', 'Insights', 'Settings']) {
       await page.getByRole('button', { name: screen, exact: true }).click();
@@ -199,6 +210,7 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
 
     ({ app, page } = await launch(profile, errors));
     await ready(page);
+    assert.equal(await page.getByRole('heading', { name: 'A calmer place for meaningful work.' }).count(), 0);
     await page.getByRole('button', { name: 'Focus', exact: true }).click();
     await page.getByRole('button', { name: 'Pause' }).waitFor();
     await page.getByRole('button', { name: 'End session' }).click();

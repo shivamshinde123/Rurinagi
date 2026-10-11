@@ -1,7 +1,7 @@
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeImage, Notification, Tray } from 'electron';
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeImage, Notification, shell, Tray } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { AppState } from '../shared/domain';
+import { AppState, isAllowedPolicyUrl } from '../shared/domain';
 import { backupDatabase, clearState, closeStorage, exportState, importState, loadState, openStorage, saveState } from './storage';
 
 if (started) app.quit();
@@ -148,6 +148,10 @@ function registerIpc(): void {
   });
   ipcMain.handle('capture:open', openCapture);
   ipcMain.handle('capture:complete', () => captureWindow?.hide());
+  ipcMain.handle('external:open', async (_event, url: unknown) => {
+    if (!isAllowedPolicyUrl(url)) throw new Error('This link is not allowed.');
+    await shell.openExternal(url);
+  });
   ipcMain.handle('notify', (_event, title: unknown, body: unknown) => {
     if (typeof title === 'string' && typeof body === 'string' && Notification.isSupported()) new Notification({ title: title.slice(0, 120), body: body.slice(0, 240) }).show();
   });

@@ -58,3 +58,11 @@ V3 adds one pure `buildFocusInsights` function and one Insights screen. A rollin
 
 The existing two-wave motif becomes the formal Rurinagi mark: two calm currents on the established green gradient. One SVG is the editable source, while a small script using the already-installed Playwright tooling produces a 512 px PNG and a seven-size Windows ICO. The same geometry now appears in the renderer, website favicon, application windows, tray, executable, and installer without adding a graphics dependency.
 
+## 2026-10-11 Keep Squirrel installation and add first-run setup
+
+Squirrel already installs Rurinagi as a normal Windows application, manages Start Menu and desktop shortcuts, and removes those shortcuts during uninstall. Replacing the packaging stack only to display a traditional installer wizard would add risk without improving the installed application. Rurinagi instead opens a two-step, app-owned setup experience on the first launch after installation.
+
+The setup explains local storage and offers desktop notifications and Start with Windows as independent, default-off choices. Completion is stored in renderer-local storage rather than the exportable task database, so importing or clearing productivity data does not re-run installation setup. Privacy and Terms links cross the sandbox only through an exact policy-URL allowlist.
+
+Code signing remains required for a trusted public installer but cannot be completed without a publisher certificate and protected signing credentials.
+

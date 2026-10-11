@@ -1,9 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  buildFocusInsights, createEmptyState, discardTimer, finishTimer, focusedSecondsToday, formatDuration,
+  buildFocusInsights, createEmptyState, discardTimer, finishTimer, focusedSecondsToday, formatDuration, isAllowedPolicyUrl, policyUrls,
   pauseTimer, recoverState, remainingSeconds, resumeTimer, startBreak, startFocus,
 } from '../src/shared/domain';
+
+test('privacy-sensitive options are off until selected', () => {
+  const state = createEmptyState();
+  assert.equal(state.settings.notifications, false);
+  assert.equal(state.settings.startWithWindows, false);
+});
+
+test('only published Rurinagi policy links may leave the app', () => {
+  assert.equal(isAllowedPolicyUrl(policyUrls.privacy), true);
+  assert.equal(isAllowedPolicyUrl(`${policyUrls.terms}#warranty`), true);
+  assert.equal(isAllowedPolicyUrl('https://example.com/privacy.html'), false);
+  assert.equal(isAllowedPolicyUrl('not a URL'), false);
+});
 
 function stateWithTask() {
   const state = createEmptyState();

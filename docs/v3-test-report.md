@@ -6,14 +6,16 @@ Version: `3.0.0`
 ## Automated verification
 
 - TypeScript: `npm run lint` passed.
-- Domain and storage: 13 tests passed, including rolling-week totals, previous-period comparison, project distribution, completion rate, streak calculation, timer recovery, import validation, and SQLite round trips.
-- Packaged Electron workflow: passed across Today, Tasks, Focus, History, Insights, Settings, Quick Capture, task/project editing, themed controls, confirmations, timer and break behavior, tray hiding, restart recovery, export, import, backup, archive, deletion, and clear-data behavior.
+- Domain and storage: 15 tests passed, including privacy-sensitive defaults, the policy URL allowlist, rolling-week totals, previous-period comparison, project distribution, completion rate, streak calculation, timer recovery, import validation, and SQLite round trips.
+- Packaged Electron workflow: passed across first-run setup, setup persistence after restart, Today, Tasks, Focus, History, Insights, Settings, Quick Capture, task/project editing, themed controls, confirmations, timer and break behavior, tray hiding, restart recovery, export, import, backup, archive, deletion, and clear-data behavior.
 - Dependency audit: `npm audit --audit-level=high` reported 0 vulnerabilities.
 - Diff hygiene: `git diff --check` passed.
 
 ## Visual and accessibility verification
 
 - The packaged Insights screen was captured at `output/playwright/v3-insights.png` and inspected at its native viewport.
+- Both first-run steps were captured at `output/playwright/first-run-setup.png` and `output/playwright/first-run-preferences.png` and visually inspected at their native viewport.
+- Privacy and Terms were rendered in installed Microsoft Edge through a local static server with zero browser console errors; the Privacy page was visually inspected at its full-page viewport.
 - Focus Skyline exposes seven labeled list items with duration and session-count text for assistive technology.
 - Project breakdown, current streak, longest streak, empty states, responsive layout, dark theme variables, increased contrast, reduced transparency, and reduced motion have explicit styles.
 - Sub-minute positive focus is shown as `<1m`, avoiding a misleading zero-duration label.
@@ -21,7 +23,9 @@ Version: `3.0.0`
 
 ## Distributables
 
-- `Rurinagi-3.0.0-Setup.exe` — 154,302,976 bytes
-- `Rurinagi-win32-x64-3.0.0.zip` — 158,731,342 bytes
+- `Rurinagi-3.0.0-Setup.exe` — 154,308,096 bytes
+- `Rurinagi-win32-x64-3.0.0.zip` — 158,736,085 bytes
 
 SHA-256 values are stored in `docs/release-checksums-v3.0.0.txt`.
+
+The artifacts include the Rurinagi logo and third-party notices. The installer is currently unsigned; Windows code signing remains a release-readiness action requiring publisher credentials.
