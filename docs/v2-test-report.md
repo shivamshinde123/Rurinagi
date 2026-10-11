@@ -15,12 +15,12 @@
 - Production dependencies: `npm.cmd audit --omit=dev` reported zero vulnerabilities.
 - Distribution: Electron Forge created the Windows installer, portable ZIP, and Squirrel package.
 
-The packaged workflow covers navigation, task and project management, Quick Capture, timer and break states, session history, settings, global shortcut registration, readable shortcut normalization, green theme tokens, measured task metadata spacing, import/export/backup, destructive actions, restart recovery, and close-to-tray restoration.
+The packaged workflow covers navigation, task and project management, confirmed task deletion, distinct create/focus actions, themed select rendering, Quick Capture, timer and break states, session history, settings, global shortcut registration, readable shortcut normalization, green theme tokens, measured task metadata spacing, import/export/backup, destructive actions, restart recovery, and close-to-tray restoration.
 
 ## Distribution artifacts
 
-- `Rurinagi-2.0.0-Setup.exe` — 153,980,416 bytes
-- `Rurinagi-win32-x64-2.0.0.zip` — 158,581,884 bytes
+- `Rurinagi-2.0.0-Setup.exe` — 153,980,928 bytes
+- `Rurinagi-win32-x64-2.0.0.zip` — 158,582,537 bytes
 
 SHA-256 values are stored in `docs/release-checksums-v2.0.0.txt`.
 
