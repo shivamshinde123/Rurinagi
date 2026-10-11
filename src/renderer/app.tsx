@@ -496,9 +496,11 @@ function CalendarControl({ ariaLabel, value, onChange }: { ariaLabel: string; va
   useEffect(() => {
     if (!open) return;
     const close = (event: PointerEvent): void => { if (!root.current?.contains(event.target as Node)) setOpen(false); };
+    const closeWithEscape = (event: KeyboardEvent): void => { if (event.key === 'Escape') { event.preventDefault(); setOpen(false); trigger.current?.focus(); } };
     document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', closeWithEscape);
     requestAnimationFrame(() => popover.current?.querySelector<HTMLButtonElement>(`[data-date="${focusedDate}"]`)?.focus());
-    return () => document.removeEventListener('pointerdown', close);
+    return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', closeWithEscape); };
   }, [open, focusedDate]);
   const show = (): void => {
     const date = value ? parseLocalDate(value) : new Date();
@@ -514,7 +516,7 @@ function CalendarControl({ ariaLabel, value, onChange }: { ariaLabel: string; va
   const changeMonth = (amount: number): void => { const next = addMonths(viewMonth, amount); setViewMonth(next); setFocusedDate(dateValue(next)); };
   return <div className={`calendar-control ${open ? 'open' : ''}`} ref={root} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
     <button ref={trigger} type="button" className="calendar-trigger" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} onClick={() => open ? setOpen(false) : show()} onKeyDown={(event) => { if (event.key === 'ArrowDown') { event.preventDefault(); show(); } }}>{value ? formatCalendarDate(value) : 'Choose date'}<Icon name="calendar" /></button>
-    {open && <div className="calendar-popover" role="dialog" aria-label={`${ariaLabel} calendar`} ref={popover} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); setOpen(false); trigger.current?.focus(); } }}>
+    {open && <div className="calendar-popover" role="dialog" aria-label={`${ariaLabel} calendar`} ref={popover}>
       <div className="calendar-header"><strong>{viewMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</strong><div className="calendar-nav"><button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)}>‹</button><button type="button" aria-label="Next month" onClick={() => changeMonth(1)}>›</button></div></div>
       <div className="calendar-weekdays" aria-hidden="true">{['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => <span key={day}>{day}</span>)}</div>
       <div className="calendar-grid" role="grid" aria-label="Calendar dates">{days.map((day) => {

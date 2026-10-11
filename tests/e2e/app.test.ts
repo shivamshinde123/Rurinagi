@@ -145,7 +145,7 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
     assert.equal((await page.locator('.insights-summary .metric').filter({ hasText: 'Sessions' }).locator('strong').textContent())?.trim(), '1');
     await page.getByText('Release', { exact: true }).waitFor();
     await page.getByText('Calculated on this device. Nothing is uploaded.', { exact: true }).waitFor();
-    await page.screenshot({ path: join(root, 'output', 'playwright', 'v3-insights.png'), fullPage: true });
+    await page.screenshot({ path: join(root, 'output', 'playwright', 'v3.1-insights.png'), animations: 'disabled' });
 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await page.getByText('Release verification task', { exact: true }).first().click();
