@@ -18,7 +18,7 @@ Reviewed October 11, 2026 for the local-only Windows desktop application and sta
 | Children's privacy | Not applicable | General productivity app with no account or publisher-side personal-data collection; no age gate is added. |
 | Email unsubscribe | Not applicable | No email or newsletter system exists. |
 | Licensed assets | Implemented | System fonts and original project artwork; open-source runtime licenses documented and packaged. |
-| Data access/export/deletion | Implemented | Local JSON export, database backup, task/session deletion, and confirmed Clear all data. Policy explains that uninstall may leave user data and recommends clearing first. |
+| Data access/export/deletion | Implemented | Local JSON export, database backup, task/session deletion, confirmed project deletion that cascades to assigned tasks, and confirmed Clear all data. Policy explains that uninstall may leave user data and recommends clearing first. |
 | Installer identity/signing | Accepted risk for current release | Squirrel installs shortcuts and launches the app. V3.0.2 aligns the runtime and shortcut AppUserModelID and supplies the Rurinagi icon for the executable, setup, tray, taskbar, and Apps & Features entry. It remains intentionally unsigned for personal and trusted-user distribution; the website, README, and release notes disclose SmartScreen/Unknown publisher behavior and publish SHA-256 checksums. |
 
 ## Release follow-ups
