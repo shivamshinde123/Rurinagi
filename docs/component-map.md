@@ -21,7 +21,7 @@ V3 keeps the connected screen components together in `src/renderer/app.tsx` beca
 - `FirstRunSetup`: two-step local-privacy explanation and explicit notification/startup preferences shown once per Windows profile.
 - `Sidebar`: primary navigation and quick capture entry point.
 - `Today`: priority selection, next task, daily tasks, summary, and quick note.
-- `Tasks`: validated named-task creation, grouping, completion, ordering, contextual draft-backed inspector editing, non-destructive archive, and confirmed permanent deletion that preserves session history.
+- `Tasks`: validated named-task creation, grouping, completion, ordering, contextual draft-backed inspector editing, project creation and confirmed cascade deletion, non-destructive archive, and confirmed permanent task deletion that preserves session history.
 - `Focus`: focus and break state machine controls, progress, and scratchpad.
 - `History`: filtered chronological records, notes, and task reassociation.
 - `Insights`: seven-day focus summary, weekly comparison, project distribution, and current/longest streaks.
@@ -38,4 +38,5 @@ V3 keeps the connected screen components together in `src/renderer/app.tsx` beca
 ## Shared domain
 
 - `buildFocusInsights`: pure aggregation boundary for all V3 insight values; it reads sessions but does not mutate or persist state.
+- `deleteProject`: pure cascade operation that removes one project and all of its tasks while retaining focus history.
 

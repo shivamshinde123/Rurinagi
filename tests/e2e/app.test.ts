@@ -57,8 +57,8 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
     assert.equal(await page.locator('input[type="date"]').count(), 0);
     await page.getByRole('button', { name: 'Planned date', exact: true }).click();
     await page.getByRole('dialog', { name: 'Planned date calendar' }).waitFor();
-    await page.getByRole('dialog', { name: 'Planned date calendar' }).press('Escape');
-    assert.equal(await page.getByRole('dialog', { name: 'Planned date calendar' }).count(), 0);
+    await page.keyboard.press('Escape');
+    await page.getByRole('dialog', { name: 'Planned date calendar' }).waitFor({ state: 'detached' });
     await page.getByLabel('Priority for today').check();
     await page.getByRole('button', { name: 'Move up' }).click();
 
@@ -69,8 +69,8 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
     await page.getByRole('heading', { name: 'Nothing needs your attention.' }).waitFor();
     await page.getByLabel('Search tasks').fill('');
 
-    await page.getByRole('button', { name: 'New project' }).click();
-    await page.getByLabel('Project name').fill('Release');
+    await page.getByRole('button', { name: 'Manage projects' }).click();
+    await page.getByLabel('New project name').fill('Release');
     await page.getByRole('button', { name: 'Create project' }).click();
     await page.getByText('Project created', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Project', exact: true }).click();
@@ -229,6 +229,20 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
     await page.getByRole('button', { name: 'Archive', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Archive task', exact: true }).click();
     assert.equal(await page.locator('.inspector').count(), 0);
+
+    await page.getByRole('button', { name: 'Manage projects' }).click();
+    const releaseProjectId = await page.evaluate(() => window.rurinagi.loadState().then((state) => state.projects.find((project) => project.name === 'Release')?.id));
+    assert.ok(releaseProjectId);
+    await page.getByRole('button', { name: 'Delete Release project' }).click();
+    await page.getByText('This project and 2 tasks will be permanently deleted. Focus history will be kept. This cannot be undone.', { exact: true }).waitFor();
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete project', exact: true }).click();
+    await page.getByText('Project and tasks deleted', { exact: true }).waitFor();
+    const afterProjectDelete = await page.evaluate(() => window.rurinagi.loadState());
+    assert.equal(afterProjectDelete.projects.some((project) => project.id === releaseProjectId), false);
+    assert.equal(afterProjectDelete.tasks.some((task) => task.projectId === releaseProjectId), false);
+    assert.equal(afterProjectDelete.sessions.some((session) => session.projectId === releaseProjectId), true);
+    await page.getByRole('button', { name: 'History', exact: true }).click();
+    await page.getByText('Deleted project', { exact: true }).first().waitFor();
 
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Clear all data' }).click();

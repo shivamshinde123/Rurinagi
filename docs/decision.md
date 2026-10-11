@@ -82,3 +82,7 @@ Release verification now launches the hardened packaged `Rurinagi.exe` directly,
 
 V3.0.2 publishes the existing multi-size Rurinagi ICO with the static website and supplies its HTTPS URL through Squirrel's `iconUrl` metadata. Without this separate field, Squirrel defaults the Windows Apps & Features entry to Electron's icon even when the application executable and installer already use the Rurinagi logo.
 
+## 2026-10-11 Cascade project deletion to tasks, not focus history
+
+Project deletion removes the project and all tasks assigned to it in one immutable state update. It retains completed focus sessions, consistent with permanent task deletion, and labels their unavailable association as “Deleted project.” The UI shows the affected task count before confirmation and blocks deletion when the project owns the running or paused focus task.
+

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  buildFocusInsights, createEmptyState, discardTimer, finishTimer, focusedSecondsToday, formatDuration, isAllowedPolicyUrl, policyUrls,
+  buildFocusInsights, createEmptyState, deleteProject, discardTimer, finishTimer, focusedSecondsToday, formatDuration, isAllowedPolicyUrl, policyUrls,
   pauseTimer, recoverState, remainingSeconds, resumeTimer, startBreak, startFocus,
 } from '../src/shared/domain';
 
@@ -9,6 +9,24 @@ test('privacy-sensitive options are off until selected', () => {
   const state = createEmptyState();
   assert.equal(state.settings.notifications, false);
   assert.equal(state.settings.startWithWindows, false);
+});
+
+test('deleting a project removes its tasks and preserves focus history', () => {
+  const state = createEmptyState();
+  state.tasks.push(
+    { id: 'remove', title: 'Remove me', description: '', projectId: 'project-career', priority: 'normal', dueDate: null, estimateSessions: 1, status: 'inbox', sortOrder: 0, isToday: false, createdAt: new Date(0).toISOString(), completedAt: null },
+    { id: 'keep', title: 'Keep me', description: '', projectId: 'project-learning', priority: 'normal', dueDate: null, estimateSessions: 1, status: 'inbox', sortOrder: 1, isToday: false, createdAt: new Date(0).toISOString(), completedAt: null },
+  );
+  state.sessions.push({ id: 'history', taskId: 'remove', projectId: 'project-career', plannedSeconds: 1500, actualSeconds: 300, startedAt: new Date(0).toISOString(), endedAt: new Date(300_000).toISOString(), outcome: 'completed', note: '' });
+
+  const next = deleteProject(state, 'project-career');
+
+  assert.equal(next.projects.some((project) => project.id === 'project-career'), false);
+  assert.deepEqual(next.tasks.map((task) => task.id), ['keep']);
+  assert.deepEqual(next.sessions, state.sessions);
+
+  state.timer = { ...state.timer, status: 'running', taskId: 'remove' };
+  assert.equal(deleteProject(state, 'project-career'), state);
 });
 
 test('only published Rurinagi policy links may leave the app', () => {

@@ -1,7 +1,7 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState, FocusDay, Priority, Project, Screen, Session, Settings, Task, TaskStatus,
-  buildFocusInsights, discardTimer, finishTimer, focusedSecondsToday, formatDuration, localDate,
+  buildFocusInsights, deleteProject, discardTimer, finishTimer, focusedSecondsToday, formatDuration, localDate,
   pauseTimer, policyUrls, remainingSeconds, resumeTimer, startBreak, startFocus,
 } from '../shared/domain';
 
@@ -188,6 +188,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
   const [taskName, setTaskName] = useState('');
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectName, setProjectName] = useState('');
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<'archive' | 'delete' | null>(null);
   const selected = state.tasks.find((task) => task.id === selectedId);
   useEffect(() => setDraft(selected ? { ...selected } : null), [selectedId]);
@@ -224,7 +225,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
   };
   const groups = [['Today', visible.filter((task) => task.isToday)], ['Tomorrow', visible.filter((task) => task.dueDate && task.dueDate > localDate() && !task.isToday)], ['Later', visible.filter((task) => !task.isToday && (!task.dueDate || task.dueDate <= localDate()))]] as const;
   return <>
-    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button create-action" onClick={() => setCreatingTask(true)}><Icon name="plus" />Add task</button></div>} />
+    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>Manage projects</button><button className="button create-action" onClick={() => setCreatingTask(true)}><Icon name="plus" />Add task</button></div>} />
     <div className={`tasks-layout ${selected && draft ? 'with-inspector' : ''}`}>
       <section className="task-browser card">
         <label className="search-field"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks" aria-label="Search tasks" /></label>
@@ -250,9 +251,19 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
       </aside>}
     </div>
     {creatingTask && <Modal title="Add a task" onClose={() => { setCreatingTask(false); setTaskName(''); }}><form onSubmit={addTask}><Field label="Task name"><input autoFocus value={taskName} maxLength={500} placeholder="What needs your attention?" onChange={(event) => setTaskName(event.target.value)} /></Field><div className="modal-actions"><button className="button primary" type="submit" disabled={!taskName.trim()}>Create task</button><button className="button quiet" type="button" onClick={() => { setCreatingTask(false); setTaskName(''); }}>Cancel</button></div></form></Modal>}
-    {creatingProject && <Modal title="New project" onClose={() => setCreatingProject(false)}><form onSubmit={addProject}><Field label="Project name"><input autoFocus value={projectName} maxLength={120} onChange={(event) => setProjectName(event.target.value)} /></Field><div className="modal-actions"><button className="button primary" type="submit" disabled={!projectName.trim()}>Create project</button><button className="button quiet" type="button" onClick={() => setCreatingProject(false)}>Cancel</button></div></form></Modal>}
+    {creatingProject && <Modal title="Manage projects" onClose={() => setCreatingProject(false)}><form onSubmit={addProject}><Field label="New project name"><input autoFocus value={projectName} maxLength={120} onChange={(event) => setProjectName(event.target.value)} /></Field><div className="modal-actions project-create-actions"><button className="button primary" type="submit" disabled={!projectName.trim()}>Create project</button></div></form><div className="project-manager"><h3>Your projects</h3>{state.projects.map((project) => {
+      const taskCount = state.tasks.filter((task) => task.projectId === project.id).length;
+      const hasLiveTimer = ['running', 'paused'].includes(state.timer.status) && state.tasks.some((task) => task.id === state.timer.taskId && task.projectId === project.id);
+      return <div className="project-manager-row" key={project.id}><span className="project-manager-name"><ProjectDot project={project} /><span><strong>{project.name}</strong><small>{taskCount} {taskCount === 1 ? 'task' : 'tasks'}</small></span></span><button className="button destructive quiet" type="button" aria-label={`Delete ${project.name} project`} disabled={hasLiveTimer} title={hasLiveTimer ? 'End the active focus session before deleting this project' : `Delete ${project.name} and its tasks`} onClick={() => { setCreatingProject(false); setDeletingProjectId(project.id); }}>Delete</button></div>;
+    })}</div><div className="modal-actions"><button className="button quiet" type="button" onClick={() => setCreatingProject(false)}>Done</button></div></Modal>}
     {confirmation === 'archive' && selected && draft && <ConfirmModal title="Archive this task?" body="It will leave your active lists, while its focus history stays available." confirmLabel="Archive task" onClose={() => setConfirmation(null)} onConfirm={() => { const next = withDraft(); commit({ ...next, tasks: next.tasks.map((task) => task.id === selected.id ? { ...task, status: 'archived' } : task) }, 'Task archived'); setSelectedId(null); setConfirmation(null); }} />}
     {confirmation === 'delete' && selected && draft && <ConfirmModal title="Delete this task permanently?" body={`“${draft.title}” will be removed. Focus history will be kept. This cannot be undone.`} confirmLabel="Delete task" destructive onClose={() => setConfirmation(null)} onConfirm={() => { commit({ ...state, tasks: state.tasks.filter((task) => task.id !== selected.id) }, 'Task deleted'); setSelectedId(null); setConfirmation(null); }} />}
+    {deletingProjectId && (() => {
+      const project = state.projects.find((candidate) => candidate.id === deletingProjectId);
+      if (!project) return null;
+      const taskCount = state.tasks.filter((task) => task.projectId === project.id).length;
+      return <ConfirmModal title={`Delete ${project.name}?`} body={`This project and ${taskCount} ${taskCount === 1 ? 'task' : 'tasks'} will be permanently deleted. Focus history will be kept. This cannot be undone.`} confirmLabel="Delete project" destructive onClose={() => { setDeletingProjectId(null); setCreatingProject(true); }} onConfirm={() => { commit(deleteProject(state, project.id), 'Project and tasks deleted'); setSelectedId(null); setDeletingProjectId(null); }} />;
+    })()}
   </>;
 }
 
@@ -335,7 +346,7 @@ function Insights({ state }: { state: AppState }) {
         {insights.projects.length === 0 ? <Empty title="No focus time yet." body="Finish a focus session and your project mix will appear here." /> : <div className="project-focus-list">{insights.projects.map((item) => {
           const project = projectFor(state, item.projectId);
           const width = Math.max(4, Math.round((item.seconds / insights.weekSeconds) * 100));
-          return <div className="project-focus-row" key={item.projectId ?? 'inbox'}><div><span><ProjectDot project={project} />{project?.name ?? 'Inbox'}</span><strong>{insightDuration(item.seconds)}</strong></div><div className="project-focus-track" aria-hidden="true"><span style={{ width: `${width}%`, background: project?.color ?? 'var(--accent)' }} /></div><small>{item.sessions} {item.sessions === 1 ? 'session' : 'sessions'}</small></div>;
+          return <div className="project-focus-row" key={item.projectId ?? 'inbox'}><div><span><ProjectDot project={project} />{project?.name ?? (item.projectId ? 'Deleted project' : 'Inbox')}</span><strong>{insightDuration(item.seconds)}</strong></div><div className="project-focus-track" aria-hidden="true"><span style={{ width: `${width}%`, background: project?.color ?? 'var(--accent)' }} /></div><small>{item.sessions} {item.sessions === 1 ? 'session' : 'sessions'}</small></div>;
         })}</div>}
         <div className="streak-pair"><div><strong>{insights.currentStreak}</strong><span>Current streak</span></div><div><strong>{insights.longestStreak}</strong><span>Longest streak</span></div></div>
       </section>
@@ -395,7 +406,7 @@ function TaskRow({ task, state, selected, onToggle, onOpen }: { task: Task; stat
 
 function SessionRow({ session, state, selected, onClick }: { session: Session; state: AppState; selected: boolean; onClick: () => void }) {
   const task = taskById(state, session.taskId); const project = projectFor(state, session.projectId);
-  return <button className={`session-row ${selected ? 'selected' : ''}`} onClick={onClick}><time>{new Date(session.startedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time><span className="session-task"><strong>{task?.title ?? 'Deleted task'}</strong><small>{project?.name ?? 'Inbox'}</small></span><span>{humanMinutes(session.actualSeconds)}</span><span className={`status ${session.outcome}`}>{session.outcome}</span></button>;
+  return <button className={`session-row ${selected ? 'selected' : ''}`} onClick={onClick}><time>{new Date(session.startedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time><span className="session-task"><strong>{task?.title ?? 'Deleted task'}</strong><small>{project?.name ?? (session.projectId ? 'Deleted project' : 'Inbox')}</small></span><span>{humanMinutes(session.actualSeconds)}</span><span className={`status ${session.outcome}`}>{session.outcome}</span></button>;
 }
 
 function ProgressRing({ progress, compact, children }: { progress: number; compact?: boolean; children: ReactNode }) {

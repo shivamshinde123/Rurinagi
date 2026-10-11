@@ -168,6 +168,16 @@ export function localDate(date = new Date()): string {
   return new Date(date.getTime() - offset).toISOString().slice(0, 10);
 }
 
+export function deleteProject(state: AppState, projectId: string): AppState {
+  if (!state.projects.some((project) => project.id === projectId)) return state;
+  if (['running', 'paused'].includes(state.timer.status) && state.tasks.some((task) => task.id === state.timer.taskId && task.projectId === projectId)) return state;
+  return {
+    ...state,
+    projects: state.projects.filter((project) => project.id !== projectId),
+    tasks: state.tasks.filter((task) => task.projectId !== projectId),
+  };
+}
+
 export function remainingSeconds(timer: TimerState, nowMs = Date.now()): number {
   if (timer.status !== 'running' || !timer.endsAt) return Math.max(0, timer.remainingSeconds);
   return Math.max(0, Math.ceil((new Date(timer.endsAt).getTime() - nowMs) / 1000));

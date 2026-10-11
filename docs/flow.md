@@ -32,6 +32,14 @@ The renderer requests a published Privacy or Terms URL through the preload bridg
 
 The global shortcut opens a small dedicated renderer window. Saving appends an inbox task, persists state, notifies the main window, and hides the capture window.
 
+## Project deletion
+
+1. Tasks opens the project manager and displays the current task count for every project.
+2. Delete opens a destructive confirmation that states the cascade size.
+3. `deleteProject` removes the selected project and every task whose `projectId` matches in one immutable state update.
+4. Existing focus sessions remain available and render their missing association as “Deleted project.”
+5. A project containing the running or paused focus task cannot be deleted until that session ends.
+
 ## Insights
 
 1. The Insights screen passes current `AppState` to `buildFocusInsights` when session history changes.
