@@ -154,7 +154,8 @@ h1, h2, h3 { text-wrap: balance; }
 .saved-hint { display: flex; align-items: center; gap: .3rem; margin-top: .55rem; color: var(--text-secondary); font-size: .7rem; }
 .saved-hint .icon { width: .9rem; }
 
-.tasks-layout { display: grid; grid-template-columns: minmax(25rem, 1fr) minmax(18rem, 23rem); align-items: start; gap: 1.25rem; }
+.tasks-layout { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 1.25rem; }
+.tasks-layout.with-inspector { grid-template-columns: minmax(25rem, 1fr) minmax(18rem, 23rem); }
 .task-browser, .inspector { padding: 1.25rem; }
 .search-field { display: flex; align-items: center; gap: .6rem; height: 2.9rem; padding: 0 .8rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-soft); }
 .search-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; }

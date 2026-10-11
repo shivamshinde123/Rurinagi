@@ -34,11 +34,15 @@ V2 adds the previously deferred Windows tray lifecycle and resolves the user-rep
 
 ## 2026-10-11 Separate archive, delete, create, and focus intent
 
-Archive remains a non-destructive organizational state, while Delete permanently removes only the task after explicit confirmation and preserves existing session history. Delete is blocked for a running or paused timer to preserve timer integrity. Add task uses a direct label and soft-green creation treatment, and a second Add task action sits beside the emphasized Start focus control in the inspector.
+Archive remains a non-destructive organizational state, while Delete permanently removes only the task after explicit confirmation and preserves existing session history. Delete is blocked for a running or paused timer to preserve timer integrity. Add task uses a direct label and soft-green creation treatment in the page header.
 
 Native select popups cannot be consistently themed on Windows, so V2 uses one reusable in-app listbox control with keyboard navigation, selection state, focus handling, outside-click dismissal, and app-native surfaces. Destructive confirmations use reusable Rurinagi dialogs instead of operating-system browser prompts.
 
 ## 2026-10-11 Require a name before task creation
 
 Add task opens an in-app dialog with a focused Task name field. Create task stays disabled for blank input, and cancellation creates no data. After submission, the named task is selected in the existing inspector for optional details; the app no longer inserts a `New task` placeholder that the user must rename.
+
+## 2026-10-11 Make task inspection contextual and updates explicit
+
+The Tasks screen does not reserve empty inspector space. Selecting or creating a task reveals a draft-backed inspector; Update task persists the draft and returns to the full-width list. Start focus saves the same draft before starting, while Archive carries draft edits into the archived record. This prevents an always-visible empty panel and distinguishes creating a task from updating one.
 

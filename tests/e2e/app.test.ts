@@ -27,6 +27,7 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     }
 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
+    assert.equal(await page.locator('.inspector').count(), 0);
     assert.equal(await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).evaluate((button) => button.classList.contains('create-action')), true);
     await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).click();
     assert.equal(await page.getByRole('dialog').getByRole('button', { name: 'Create task' }).isDisabled(), true);
@@ -34,7 +35,7 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByRole('dialog').getByRole('button', { name: 'Create task' }).click();
     await page.getByText('Task created', { exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: 'Start focus' }).evaluate((button) => button.classList.contains('focus-action')), true);
-    assert.equal(await page.locator('.primary-task-actions').getByRole('button', { name: 'Add task', exact: true }).count(), 1);
+    assert.equal(await page.locator('.primary-task-actions').getByRole('button', { name: 'Update task', exact: true }).count(), 1);
     await page.getByLabel('Notes').fill('Exercise the complete daily loop');
     await page.getByLabel('Sessions').fill('3');
     await chooseOption(page, 'Priority', 'High');
@@ -58,6 +59,9 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByRole('option', { name: 'Release', exact: true }).click();
     assert.equal((await page.getByRole('button', { name: 'Project', exact: true }).textContent())?.trim(), 'Release');
     assert.equal(await page.locator('select').count(), 0);
+    await page.getByRole('button', { name: 'Update task', exact: true }).click();
+    await page.getByText('Task updated', { exact: true }).waitFor();
+    assert.equal(await page.locator('.inspector').count(), 0);
 
     await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).click();
     await page.getByLabel('Task name').fill('Delete verification task');
@@ -194,7 +198,7 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByText('Release verification task', { exact: true }).first().click();
     await page.getByRole('button', { name: 'Archive', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Archive task', exact: true }).click();
-    await page.getByRole('heading', { name: 'Select a task' }).waitFor();
+    assert.equal(await page.locator('.inspector').count(), 0);
 
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Clear all data' }).click();
