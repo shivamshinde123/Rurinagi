@@ -1,8 +1,10 @@
-# Rurinagi V2 product requirements
+# Rurinagi V3 product requirements
 
 ## Goal
 
-Rurinagi helps one person answer “What should I work on now?” without an account or network connection. V2 preserves the complete daily loop and makes the app easier to keep available, read, and operate from Windows.
+V3 adds calm, private feedback about focus patterns while preserving the complete daily loop and all offline guarantees.
+
+Rurinagi helps one person answer “What should I work on now?” without an account or network connection. V3 preserves the complete daily loop and adds private, understandable feedback about focus patterns.
 
 ## Users
 
@@ -16,6 +18,7 @@ The primary user is an individual Windows user managing personal work such as jo
 - Quick Capture opens from a global shortcut and saves to the inbox with immediate keyboard focus.
 - The shortcut is shown in familiar Windows notation while its portable Electron accelerator remains valid internally.
 - History lists completed, partial, and interrupted sessions with notes.
+- Insights summarizes the last seven days, compares them with the prior seven days, shows a Focus Skyline, breaks time down by project, and reports current and longest focus streaks.
 - Settings controls timer durations, break behavior, notifications, theme, reduced motion, startup behavior, backup, import, export, and deletion.
 - Closing the main window keeps Rurinagi available in the system tray, whose menu can restore the app, open Quick Capture, or quit.
 - The app uses the product website's green visual identity and keeps project metadata clearly spaced.
@@ -36,8 +39,9 @@ The primary user is an individual Windows user managing personal work such as jo
 - Add task opens a focused name field and creates nothing until a non-empty name is submitted.
 - The task inspector is absent until a task is selected or created; Update task saves the draft and closes it.
 - Planned dates use the app-rendered calendar in Task Details and Quick Capture, with month navigation, Today, Clear, keyboard navigation, and local `YYYY-MM-DD` storage.
+- Insights are calculated from existing local session history, render seven accessible day values, and require no account, upload, or new persistence fields.
 
 ## Out of scope
 
-Spotify, calendar, weather, detailed analytics, Focus Skyline, AI, accounts, collaboration, surveillance, and automatic closing of other applications.
+Spotify, calendar or weather integrations, cloud analytics, AI, accounts, collaboration, surveillance, and automatic closing of other applications.
 

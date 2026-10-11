@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -9,7 +9,8 @@ const root = process.cwd();
 const electronPath = join(root, 'node_modules', 'electron', 'dist', 'electron.exe');
 const mainPath = join(root, '.vite', 'build', 'main.cjs');
 
-test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, async () => {
+test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, async () => {
+  mkdirSync(join(root, 'output', 'playwright'), { recursive: true });
   const profile = mkdtempSync(join(tmpdir(), 'rurinagi-e2e-'));
   const exported = join(profile, 'rurinagi-export.json');
   const backup = join(profile, 'rurinagi-backup.sqlite');
@@ -21,7 +22,7 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     let page = await app.firstWindow();
     await ready(page);
 
-    for (const screen of ['Today', 'Tasks', 'Focus', 'History', 'Settings']) {
+    for (const screen of ['Today', 'Tasks', 'Focus', 'History', 'Insights', 'Settings']) {
       await page.getByRole('button', { name: screen, exact: true }).click();
       await page.getByRole('heading', { name: screen === 'Focus' ? 'Choose one task.' : screen }).waitFor();
     }
@@ -122,6 +123,14 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await chooseOption(page, 'Task', 'Release verification task');
     await chooseOption(page, 'Filter by project', 'Release');
     assert.equal(await page.getByRole('button', { name: /Release verification task/ }).count(), 1);
+
+    await page.getByRole('button', { name: 'Insights', exact: true }).click();
+    await page.getByRole('heading', { name: 'Focus skyline' }).waitFor();
+    assert.equal(await page.locator('.skyline-day').count(), 7);
+    assert.equal((await page.locator('.insights-summary .metric').filter({ hasText: 'Sessions' }).locator('strong').textContent())?.trim(), '1');
+    await page.getByText('Release', { exact: true }).waitFor();
+    await page.getByText('Calculated on this device. Nothing is uploaded.', { exact: true }).waitFor();
+    await page.screenshot({ path: join(root, 'output', 'playwright', 'v3-insights.png'), fullPage: true });
 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await page.getByText('Release verification task', { exact: true }).first().click();

@@ -1,10 +1,14 @@
-# Rurinagi V2 technical design
+# Rurinagi V3 technical design
 
 ## State model
 
 `AppState` is a versioned document containing projects, tasks, sessions, timer state, settings, and the session scratchpad. All mutations produce a new state and persist immediately after user actions.
 
-The data schema remains version 1 because V2 adds no fields. On load or import, the one legacy default Career color (`#456FAE`) is upgraded to the website green (`#315F4D`); user-created project colors are preserved.
+The data schema remains version 1 because V3 adds no fields. On load or import, the one legacy default Career color (`#456FAE`) is upgraded to the website green (`#315F4D`); user-created project colors are preserved.
+
+## Insights model
+
+`buildFocusInsights` is a pure domain function over existing session history. It calculates a rolling seven-day series, the preceding seven-day comparison, completed-session rate, project totals, and calendar-day streaks. The renderer receives derived values only; no analytics state is persisted and no chart package is loaded.
 
 ## Timer model
 
@@ -29,5 +33,5 @@ Load failures surface an actionable full-screen error. Save failures retain UI s
 
 ## Testing
 
-Pure tests cover remaining-time calculation, timer start/pause/resume, focus completion, and startup recovery. Build and TypeScript checks cover process boundaries and renderer compilation.
+Pure tests cover timer behavior, startup recovery, weekly boundaries, comparison percentages, project totals, completion rate, and streak behavior. The packaged Electron workflow verifies every screen and the rendered Focus Skyline.
 

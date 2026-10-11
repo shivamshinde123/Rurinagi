@@ -10,6 +10,7 @@
 | Tasks                | Main screen                                       |
 | Focus                |                                                   |
 | History              |                                                   |
+| Insights             |                                                   |
 | Settings             |                                                   |
 |                      |                                                   |
 | Quick capture        |                                                   |
@@ -50,6 +51,20 @@ A compact floating window opens with the title field focused. Project, date, and
 ## History
 
 A compact summary precedes a chronological, keyboard-readable session list. Status uses text plus color.
+
+## Insights
+
+```text
+Focused       Sessions       Completed       Current streak
++------------------------------------------+  +--------------------+
+| Focus Skyline: seven vertical day bars  |  | Projects           |
+| previous-week comparison                |  | proportional bars  |
++------------------------------------------+  | current / longest  |
+                                              +--------------------+
+                    Calculated on this device
+```
+
+The skyline uses the established green palette, restrained bar entrance motion, visible values, and accessible day labels. Empty history produces an intentional zero state rather than an empty chart. Project distribution and both streak values share the same local-only surface.
 
 ## Settings
 

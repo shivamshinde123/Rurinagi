@@ -14,7 +14,7 @@
 - Use function components and semantic HTML.
 - Keep interactive targets at least 44 by 44 CSS pixels.
 - Pair color states with text or icons and preserve visible keyboard focus.
-- Keep screen-specific UI in `src/renderer/screens` and shared UI in `src/renderer/components`.
+- Keep the current tightly connected screens and small shared controls in `src/renderer/app.tsx`; split modules only when reuse or independent ownership makes the boundary useful.
 
 ## Styling
 

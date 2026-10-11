@@ -1,7 +1,7 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AppState, Priority, Project, Screen, Session, Settings, Task, TaskStatus,
-  discardTimer, finishTimer, focusedSecondsToday, formatDuration, localDate,
+  AppState, FocusDay, Priority, Project, Screen, Session, Settings, Task, TaskStatus,
+  buildFocusInsights, discardTimer, finishTimer, focusedSecondsToday, formatDuration, localDate,
   pauseTimer, remainingSeconds, resumeTimer, startBreak, startFocus,
 } from '../shared/domain';
 
@@ -10,6 +10,7 @@ const screens: { id: Screen; label: string; icon: IconName }[] = [
   { id: 'tasks', label: 'Tasks', icon: 'check' },
   { id: 'focus', label: 'Focus', icon: 'timer' },
   { id: 'history', label: 'History', icon: 'history' },
+  { id: 'insights', label: 'Insights', icon: 'insights' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
 ];
 
@@ -55,6 +56,7 @@ export function App() {
           {screen === 'tasks' && <Tasks state={state} commit={commit} navigate={setScreen} />}
           {screen === 'focus' && <Focus state={state} commit={commit} />}
           {screen === 'history' && <History state={state} commit={commit} />}
+          {screen === 'insights' && <Insights state={state} />}
           {screen === 'settings' && <SettingsScreen state={state} commit={commit} setToast={setToast} />}
         </main>
       </div>
@@ -261,6 +263,51 @@ function History({ state, commit }: { state: AppState; commit: Commit }) {
   </>;
 }
 
+function Insights({ state }: { state: AppState }) {
+  const insights = useMemo(() => buildFocusInsights(state), [state.sessions]);
+  const comparison = insights.weekChangePercent === null
+    ? insights.weekSeconds ? 'Your first recorded week' : 'Ready when you are'
+    : insights.weekChangePercent === 0 ? 'Even with the previous 7 days'
+    : `${Math.abs(insights.weekChangePercent)}% ${insights.weekChangePercent > 0 ? 'more' : 'less'} than the previous 7 days`;
+  return <>
+    <PageHeader eyebrow="Private insights" title="Insights" subtitle="A local view of where your attention has gone." />
+    <section className="insights-summary card" aria-label="Last 7 days summary">
+      <Metric value={insightDuration(insights.weekSeconds)} label="Focused" />
+      <Metric value={String(insights.sessions)} label="Sessions" />
+      <Metric value={`${insights.completionRate}%`} label="Completed" />
+      <Metric value={`${insights.currentStreak} ${insights.currentStreak === 1 ? 'day' : 'days'}`} label="Current streak" />
+    </section>
+    <div className="insights-grid">
+      <section className="card skyline-card">
+        <div className="insight-heading"><div><span className="section-label">Last 7 days</span><h2>Focus skyline</h2></div><span className={`trend ${insights.weekChangePercent !== null && insights.weekChangePercent < 0 ? 'down' : ''}`}>{comparison}</span></div>
+        <FocusSkyline days={insights.days} />
+      </section>
+      <section className="card project-insights">
+        <span className="section-label">Distribution</span><h2>Projects</h2>
+        {insights.projects.length === 0 ? <Empty title="No focus time yet." body="Finish a focus session and your project mix will appear here." /> : <div className="project-focus-list">{insights.projects.map((item) => {
+          const project = projectFor(state, item.projectId);
+          const width = Math.max(4, Math.round((item.seconds / insights.weekSeconds) * 100));
+          return <div className="project-focus-row" key={item.projectId ?? 'inbox'}><div><span><ProjectDot project={project} />{project?.name ?? 'Inbox'}</span><strong>{insightDuration(item.seconds)}</strong></div><div className="project-focus-track" aria-hidden="true"><span style={{ width: `${width}%`, background: project?.color ?? 'var(--accent)' }} /></div><small>{item.sessions} {item.sessions === 1 ? 'session' : 'sessions'}</small></div>;
+        })}</div>}
+        <div className="streak-pair"><div><strong>{insights.currentStreak}</strong><span>Current streak</span></div><div><strong>{insights.longestStreak}</strong><span>Longest streak</span></div></div>
+      </section>
+    </div>
+    <p className="local-insight-note"><span className="status-dot" />Calculated on this device. Nothing is uploaded.</p>
+  </>;
+}
+
+function FocusSkyline({ days }: { days: FocusDay[] }) {
+  const maxSeconds = Math.max(1, ...days.map((day) => day.seconds));
+  return <div className="skyline" role="list" aria-label="Focus time by day">{days.map((day, index) => {
+    const height = day.seconds ? Math.max(10, Math.round((day.seconds / maxSeconds) * 100)) : 3;
+    return <div className={`skyline-day ${index === days.length - 1 ? 'today' : ''}`} role="listitem" aria-label={`${formatDay(day.date)}: ${insightDuration(day.seconds)} across ${day.sessions} sessions`} key={day.date}>
+      <span className="skyline-value">{day.seconds ? insightDuration(day.seconds) : ''}</span>
+      <span className="skyline-column"><span className="skyline-bar" style={{ height: `${height}%`, animationDelay: `${index * 35}ms` }} /></span>
+      <strong>{day.label}</strong><small>{Number(day.date.slice(-2))}</small>
+    </div>;
+  })}</div>;
+}
+
 function SettingsScreen({ state, commit, setToast }: { state: AppState; commit: Commit; setToast: (toast: string) => void }) {
   const [confirmClear, setConfirmClear] = useState(false);
   const update = (patch: Partial<Settings>) => commit({ ...state, settings: { ...state.settings, ...patch } });
@@ -277,7 +324,7 @@ function SettingsScreen({ state, commit, setToast }: { state: AppState; commit: 
       <SettingsGroup title="Appearance"><div className="setting-row"><div><strong>Theme</strong><small>Match your workspace.</small></div><SelectControl ariaLabel="Theme" value={state.settings.theme} onChange={(value) => update({ theme: value as Settings['theme'] })} options={[{ value: 'system', label: 'Follow system' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} /></div><SettingToggle label="Reduce motion" checked={state.settings.reducedMotion} onChange={(checked) => update({ reducedMotion: checked })} /><SettingToggle label="Compact density" checked={state.settings.compactDensity} onChange={(checked) => update({ compactDensity: checked })} /></SettingsGroup>
       <SettingsGroup title="Behavior"><SettingToggle label="Start with Windows" checked={state.settings.startWithWindows} onChange={(checked) => update({ startWithWindows: checked })} /><SettingToggle label="Confirm before discarding a session" checked={state.settings.confirmDiscard} onChange={(checked) => update({ confirmDiscard: checked })} /><ShortcutInput value={state.settings.quickCaptureShortcut} onChange={(quickCaptureShortcut) => update({ quickCaptureShortcut })} /></SettingsGroup>
       <SettingsGroup title="Data and privacy"><p className="privacy-copy">Your tasks and focus history are stored locally on this device.</p><div className="data-actions"><button className="button secondary" onClick={() => void action('export')}>Export data</button><button className="button secondary" onClick={() => void action('import')}>Import data</button><button className="button secondary" onClick={() => void action('backup')}>Back up database</button></div><button className="button destructive quiet" onClick={() => setConfirmClear(true)}>Clear all data</button></SettingsGroup>
-      <SettingsGroup title="About"><div className="about-row"><Logo /><div><strong>Rurinagi</strong><small>Version 2.0.0 · Private by design</small></div></div></SettingsGroup>
+      <SettingsGroup title="About"><div className="about-row"><Logo /><div><strong>Rurinagi</strong><small>Version 3.0.0 · Private by design</small></div></div></SettingsGroup>
     </div>
     {confirmClear && <ConfirmModal title="Clear all local data?" body="Every task, project, focus record, and note will be permanently removed. This cannot be undone." confirmLabel="Clear all data" destructive onClose={() => setConfirmClear(false)} onConfirm={() => { void window.rurinagi.clearData().then((next) => { commit(next, 'All local data cleared'); setConfirmClear(false); }).catch((cause: unknown) => setToast(`Clear failed: ${message(cause)}`)); }} />}
   </>;
@@ -420,12 +467,13 @@ function CalendarControl({ ariaLabel, value, onChange }: { ariaLabel: string; va
 function ProjectDot({ project }: { project?: Project }) { return <span className="project-dot" style={{ background: project?.color ?? '#9A9AA1' }} />; }
 function Logo() { return <span className="logo" aria-label="Rurinagi"><svg viewBox="0 0 36 36" role="img"><path d="M7 19c4-7 8-9 12-5 4 4 6 3 10-2" /><path d="M7 24c5-4 9-4 13-1 3 2 6 1 9-2" /></svg></span>; }
 
-type IconName = 'sun' | 'check' | 'timer' | 'history' | 'settings' | 'plus' | 'search' | 'more' | 'play' | 'calendar';
+type IconName = 'sun' | 'check' | 'timer' | 'history' | 'insights' | 'settings' | 'plus' | 'search' | 'more' | 'play' | 'calendar';
 function Icon({ name }: { name: IconName }) {
   const paths: Record<IconName, ReactNode> = {
     sun: <><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
     check: <path d="m5 12 4 4L19 6" />, timer: <><circle cx="12" cy="13" r="8" /><path d="M9 2h6M12 13l3-3" /></>,
     history: <><path d="M4 7v5h5" /><path d="M5.5 17a8 8 0 1 0-.8-8" /><path d="M12 8v5l3 2" /></>,
+    insights: <><path d="M4 19V11M10 19V5M16 19v-6M22 19V8" /><path d="M3 19h20" /></>,
     settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>,
     plus: <path d="M12 5v14M5 12h14" />, search: <><circle cx="11" cy="11" r="6" /><path d="m16 16 5 5" /></>, more: <><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></>, play: <path d="m8 5 11 7-11 7Z" />,
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></>,
@@ -438,6 +486,7 @@ function projectFor(state: AppState, id: string | null): Project | undefined { r
 function taskById(state: AppState, id: string | null): Task | undefined { return state.tasks.find((task) => task.id === id); }
 function humanMinutes(seconds: number): string { const minutes = Math.round(seconds / 60); return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`; }
 function focusDuration(seconds: number): string { return seconds < 60 ? 'Less than 1m' : humanMinutes(seconds); }
+function insightDuration(seconds: number): string { return seconds > 0 && seconds < 60 ? '<1m' : humanMinutes(seconds); }
 function boundedInt(value: string, min: number, max: number): number { return Math.min(max, Math.max(min, Number.parseInt(value, 10) || min)); }
 function parseLocalDate(value: string): Date { const [year, month, day] = value.split('-').map(Number); return new Date(year!, month! - 1, day!, 12); }
 function dateValue(date: Date): string { return localDate(date); }

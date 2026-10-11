@@ -30,5 +30,5 @@ The database is stored under Electron's per-user application-data directory as `
 - Timer: mode, status, task, duration, remaining time, timestamps, and cycle count.
 - Settings: durations, break cadence, notifications, theme, motion, startup behavior, and shortcut.
 
-Relational normalization for analytics is deferred until V3 query requirements are concrete.
+V3 insight queries remain small, read-only aggregations over the state document. Relational normalization is deferred until measured data volume or query complexity justifies it.
 
