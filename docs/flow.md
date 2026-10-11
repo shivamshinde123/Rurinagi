@@ -27,3 +27,6 @@
 
 The global shortcut opens a small dedicated renderer window. Saving appends an inbox task, persists state, notifies the main window, and hides the capture window.
 
+## Tray lifecycle
+
+The main process creates one tray instance after the main window is created. Closing the main window prevents destruction and hides it. Show Rurinagi restores and focuses that window; Quick capture reuses the existing capture-window path; Quit marks the process as quitting before normal window, shortcut, tray, and database cleanup.

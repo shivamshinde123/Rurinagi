@@ -1,5 +1,12 @@
 # Component map
 
+## V2 desktop shell
+
+- Main window: hosts the full planning and focus experience; close hides it to the tray.
+- Quick Capture window: captures a task without restoring the full application.
+- Tray: owns Show Rurinagi, Quick capture, and Quit commands for the running process.
+- Settings shortcut input: translates readable Windows notation to the persisted Electron accelerator.
+
 ## Desktop processes
 
 - `src/main/main.ts`: Electron lifecycle, windows, global shortcut, notifications, and IPC registration.
@@ -8,7 +15,7 @@
 
 ## Renderer
 
-V1 keeps the connected screen components together in `src/renderer/app.tsx` because they share one small state boundary. Split them only when independent ownership or reuse appears.
+V2 keeps the connected screen components together in `src/renderer/app.tsx` because they share one small state boundary. Split them only when independent ownership or reuse appears.
 
 - `App`: loads state, coordinates persistence, navigation, theme, and window mode.
 - `Sidebar`: primary navigation and quick capture entry point.

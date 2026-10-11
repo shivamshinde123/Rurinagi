@@ -28,3 +28,7 @@ The project website is a dependency-free static site deployed with GitHub Action
 
 Version tags are created only after TypeScript validation, domain tests, SQLite round-trip tests, packaged Electron end-to-end workflows, dependency audit, distributable creation, checksum generation, and website browser QA pass. The V1 audit replaced an unsupported browser prompt with an in-app project modal, honored the discard-confirmation setting, hardened imported-state validation, and removed inert controls.
 
+## 2026-10-11 Define the focused V2 contract
+
+V2 adds the previously deferred Windows tray lifecycle and resolves the user-reported visual issues without expanding into analytics, accounts, or integrations. The main window closes to the tray; its menu restores the app, opens Quick Capture, or exits explicitly. The UI adopts the website palette (`#315F4D` and `#17392D`) with lighter related greens in dark mode for contrast. Task project metadata uses an explicit layout gap, and shortcut settings translate `CommandOrControl+Shift+Space` to the readable `Ctrl + Shift + Space` presentation without breaking persisted accelerators.
+

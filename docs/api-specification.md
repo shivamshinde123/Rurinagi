@@ -2,7 +2,7 @@
 
 ## Scope
 
-Rurinagi V1 has no network API. A sandboxed Electron renderer communicates with the privileged main process through a narrow, typed preload bridge.
+Rurinagi V2 has no network API. A sandboxed Electron renderer communicates with the privileged main process through a narrow, typed preload bridge.
 
 ## Renderer bridge
 

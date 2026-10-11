@@ -1,8 +1,8 @@
 # Data extraction specification
 
-## V1 inputs
+## V2 inputs
 
-Rurinagi does not ingest third-party data in V1. User-entered tasks, projects, notes, settings, and timer events are accepted through local UI controls.
+Rurinagi does not ingest third-party data in V2. User-entered tasks, projects, notes, settings, and timer events are accepted through local UI controls.
 
 ## Processing rules
 
@@ -15,5 +15,5 @@ Rurinagi does not ingest third-party data in V1. User-entered tasks, projects, n
 
 ## Deferred ingestion
 
-Calendar, Spotify, weather, clipboard enrichment, and AI-provider ingestion are deferred beyond V1.
+Calendar, Spotify, weather, clipboard enrichment, and AI-provider ingestion remain deferred.
 

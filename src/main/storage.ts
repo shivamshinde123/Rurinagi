@@ -34,14 +34,15 @@ function db(): DatabaseSync {
 export function loadState(): AppState {
   const row = db().prepare('SELECT json FROM app_state WHERE id = 1').get() as { json: string } | undefined;
   if (!row) throw new Error('Application state is missing.');
-  const state = validateState(JSON.parse(row.json));
+  const validated = validateState(JSON.parse(row.json));
+  const state = upgradeState(validated);
   const recovered = recoverState(state);
-  if (JSON.stringify(recovered) !== JSON.stringify(state)) saveState(recovered);
+  if (JSON.stringify(recovered) !== JSON.stringify(validated)) saveState(recovered);
   return recovered;
 }
 
 export function saveState(input: unknown): AppState {
-  const state = validateState(input);
+  const state = upgradeState(validateState(input));
   const json = JSON.stringify(state);
   const connection = db();
   connection.exec('BEGIN IMMEDIATE');
@@ -85,7 +86,7 @@ export function validateState(input: unknown): AppState {
   if (!isObject(input) || input.version !== 1) throw new Error('Unsupported Rurinagi data version.');
   if (!Array.isArray(input.projects) || !Array.isArray(input.tasks) || !Array.isArray(input.sessions)) throw new Error('Invalid data collections.');
   if (!isObject(input.timer) || !isObject(input.settings)) throw new Error('Invalid timer or settings data.');
-  if (input.projects.length > 500 || input.tasks.length > 10_000 || input.sessions.length > 100_000) throw new Error('Imported data exceeds V1 limits.');
+  if (input.projects.length > 500 || input.tasks.length > 10_000 || input.sessions.length > 100_000) throw new Error('Imported data exceeds supported limits.');
   for (const project of input.projects) {
     if (!isObject(project) || !validId(project.id) || !validText(project.name, 120) || !validText(project.color, 32)) throw new Error('Invalid project record.');
   }
@@ -118,6 +119,13 @@ export function validateState(input: unknown): AppState {
     || !validText(settings.quickCaptureShortcut, 120)) throw new Error('Invalid settings data.');
   if (!validText(input.quickNote, MAX_TEXT) || !validText(input.sessionNote, MAX_TEXT)) throw new Error('Invalid note data.');
   return structuredClone(input) as unknown as AppState;
+}
+
+function upgradeState(state: AppState): AppState {
+  const projects = state.projects.map((project) => project.id === 'project-career' && project.color.toLowerCase() === '#456fae'
+    ? { ...project, color: '#315F4D' }
+    : project);
+  return projects.some((project, index) => project !== state.projects[index]) ? { ...state, projects } : state;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

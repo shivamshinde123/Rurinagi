@@ -9,7 +9,7 @@ const root = process.cwd();
 const electronPath = join(root, 'node_modules', 'electron', 'dist', 'electron.exe');
 const mainPath = join(root, '.vite', 'build', 'main.cjs');
 
-test('packaged Electron app completes every V1 workflow', { timeout: 180_000 }, async () => {
+test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, async () => {
   const profile = mkdtempSync(join(tmpdir(), 'rurinagi-e2e-'));
   const exported = join(profile, 'rurinagi-export.json');
   const backup = join(profile, 'rurinagi-backup.sqlite');
@@ -67,6 +67,9 @@ test('packaged Electron app completes every V1 workflow', { timeout: 180_000 }, 
 
     await page.getByRole('button', { name: 'Today', exact: true }).click();
     await page.getByText('Captured release task', { exact: true }).waitFor();
+    const projectLabel = page.locator('.project-label').first();
+    const [dotBox, nameBox] = await Promise.all([projectLabel.locator('.project-dot').boundingBox(), projectLabel.locator('span').last().boundingBox()]);
+    assert.ok(dotBox && nameBox && nameBox.x - (dotBox.x + dotBox.width) >= 4, 'project dot has readable spacing from its name');
     await page.getByLabel('Quick note').fill('Exported note');
     await page.getByRole('button', { name: /^Captured release task/ }).click();
     await page.getByRole('button', { name: 'Pause' }).click();
@@ -107,19 +110,24 @@ test('packaged Electron app completes every V1 workflow', { timeout: 180_000 }, 
     await page.getByLabel('Start breaks automatically').check();
     await page.getByLabel('Desktop notifications').uncheck();
     await page.getByLabel('Completion sound').check();
+    await page.getByLabel('Theme').selectOption('light');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()), '#315f4d');
     await page.getByLabel('Theme').selectOption('dark');
     await page.getByLabel('Reduce motion').check();
     await page.getByLabel('Compact density').check();
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()), '#79b598');
     assert.equal(await page.locator('html').getAttribute('data-motion'), 'reduced');
     assert.equal(await page.locator('html').getAttribute('data-density'), 'compact');
     await page.getByLabel('Start with Windows').check();
     await page.getByLabel('Start with Windows').uncheck();
     await page.getByLabel('Confirm before discarding a session').uncheck();
     assert.equal(await app.evaluate(({ globalShortcut }) => globalShortcut.isRegistered('CommandOrControl+Shift+Space')), true);
-    await page.getByLabel('Quick capture shortcut').fill('CommandOrControl+Shift+F9');
+    assert.equal(await page.getByLabel('Quick capture shortcut').inputValue(), 'Ctrl + Shift + Space');
+    await page.getByLabel('Quick capture shortcut').fill('Ctrl + Shift + F9');
     await page.getByLabel('Quick capture shortcut').press('Tab');
     assert.equal(await app.evaluate(({ globalShortcut }) => globalShortcut.isRegistered('CommandOrControl+Shift+F9')), true);
+    assert.equal((await page.evaluate(() => window.rurinagi.loadState())).settings.quickCaptureShortcut, 'CommandOrControl+Shift+F9');
 
     await app.evaluate(({ dialog }, paths) => {
       (dialog as unknown as { showSaveDialog: (options: { title?: string }) => Promise<{ canceled: boolean; filePath: string }> }).showSaveDialog = async (options) => ({
@@ -174,6 +182,12 @@ test('packaged Electron app completes every V1 workflow', { timeout: 180_000 }, 
     await page.getByText('All local data cleared', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await page.getByRole('heading', { name: 'Nothing needs your attention.' }).waitFor();
+
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((window) => window.getTitle() === 'Rurinagi')?.close());
+    await page.waitForTimeout(150);
+    assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((window) => window.getTitle() === 'Rurinagi')?.isVisible()), false);
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((window) => window.getTitle() === 'Rurinagi')?.show());
+    await page.getByRole('button', { name: 'Today', exact: true }).waitFor();
 
     assert.deepEqual(errors, []);
   } finally {

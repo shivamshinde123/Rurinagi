@@ -43,7 +43,7 @@ A centered task title and large tabular timer dominate. Pause is primary while r
 
 ## Quick capture
 
-A compact floating window opens with the title field focused. Project, date, and estimate remain secondary. Enter saves; Escape closes.
+A compact floating window opens with the title field focused. Project, date, and estimate remain secondary. Enter saves; Escape closes. Settings presents the default accelerator as `Ctrl + Shift + Space`, not Electron's internal `CommandOrControl` token.
 
 ## History
 
@@ -59,6 +59,8 @@ Settings use labeled rows grouped under Timer, Appearance, Behavior, Data and pr
 - Panels and dialogs use symmetric 180 ms transform and opacity transitions.
 - Timer progress is continuous but not decorative.
 - `prefers-reduced-motion` and the in-app setting remove transforms and animated progress.
-- Focus rings use the lapis accent and are never removed.
+- Focus rings use the website-green accent and are never removed.
 - Light, dark, increased-contrast, and reduced-transparency modes preserve readable surfaces.
+
+Project metadata uses a dedicated inline label with visible space between its color dot and project name.
 
