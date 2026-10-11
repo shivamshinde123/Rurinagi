@@ -159,7 +159,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
   };
   const groups = [['Today', visible.filter((task) => task.isToday)], ['Tomorrow', visible.filter((task) => task.dueDate && task.dueDate > localDate() && !task.isToday)], ['Later', visible.filter((task) => !task.isToday && (!task.dueDate || task.dueDate <= localDate()))]] as const;
   return <>
-    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button create-action" onClick={add}><Icon name="plus" />New task</button></div>} />
+    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button create-action" onClick={add}><Icon name="plus" />Add task</button></div>} />
     <div className="tasks-layout">
       <section className="task-browser card">
         <label className="search-field"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks" aria-label="Search tasks" /></label>
