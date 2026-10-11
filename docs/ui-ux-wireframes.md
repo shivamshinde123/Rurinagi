@@ -37,13 +37,15 @@ Greeting and supportive prompt
 
 The grouped task list occupies the full main area until a task is selected. Add task opens a focused naming dialog with Create task and Cancel actions; no placeholder task is inserted. Selecting or creating a task reveals the right-side inspector. Its fields edit a draft, and Update task saves that draft and closes the inspector. Empty groups use concise, actionable text. The inspector separates non-destructive Archive from confirmed permanent Delete; Delete preserves focus-history records and is disabled for a live timer.
 
+Planned date opens a solid app-rendered calendar above its inspector field so it remains visible near the bottom of the window. The calendar uses the green selected state, a small today marker, adjacent-month dates, previous/next month controls, and Clear and Today actions.
+
 ## Focus
 
 A centered task title and large tabular timer dominate. Pause is primary while running; resume is primary while paused. Ending early opens a modal with save, discard, and continue actions.
 
 ## Quick capture
 
-A compact floating window opens with the title field focused. Project, date, and estimate remain secondary. Enter saves; Escape closes. Settings presents the default accelerator as `Ctrl + Shift + Space`, not Electron's internal `CommandOrControl` token.
+A compact floating window opens with the title field focused. Project, date, and estimate remain secondary. Its calendar is centered and compact enough to stay within the capture window. Enter saves; Escape closes. Settings presents the default accelerator as `Ctrl + Shift + Space`, not Electron's internal `CommandOrControl` token.
 
 ## History
 
@@ -54,6 +56,8 @@ A compact summary precedes a chronological, keyboard-readable session list. Stat
 Settings use labeled rows grouped under Timer, Appearance, Behavior, Data and privacy, and About. Destructive data clearing sits last and requires confirmation.
 
 Dropdowns use app-rendered listboxes with the same rounded surfaces, green focus treatment, spacing, selected-state checkmarks, and chevrons as the rest of the app. They support pointer, arrow-key, Enter, Escape, and focus dismissal behavior. Update task is a soft-green action placed beside the emphasized filled Start focus action in the inspector.
+
+Calendar controls use the same app-owned surfaces and green focus language rather than the operating system date picker. Arrow keys move by day or week, Page Up and Page Down move by month, and Escape or outside click dismisses the popover.
 
 Destructive and archival confirmations appear as centered Rurinagi dialogs with clear consequences, explicit action labels, Cancel, focus treatment, and outside-click dismissal.
 

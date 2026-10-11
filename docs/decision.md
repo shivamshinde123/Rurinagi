@@ -46,3 +46,7 @@ Add task opens an in-app dialog with a focused Task name field. Create task stay
 
 The Tasks screen does not reserve empty inspector space. Selecting or creating a task reveals a draft-backed inspector; Update task persists the draft and returns to the full-width list. Start focus saves the same draft before starting, while Archive carries draft edits into the archived record. This prevents an always-visible empty panel and distinguishes creating a task from updating one.
 
+## 2026-10-11 Replace the native date picker with an app-rendered calendar
+
+Windows renders `input[type="date"]` with operating-system chrome that conflicts with Rurinagi's visual language and cannot be styled reliably. Task Details and Quick Capture now share one dependency-free calendar control using the existing green palette, solid floating surfaces, explicit Today and Clear actions, and desktop keyboard navigation. Stored values remain local `YYYY-MM-DD` strings, so no data migration or persistence change is required.
+
