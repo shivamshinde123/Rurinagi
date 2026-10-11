@@ -5,7 +5,7 @@
 - Version: `2.0.0`
 - Platform: Windows x64
 - Verification date: 2026-10-11
-- Status: implementation candidate verified; release tag and GitHub Release not yet created.
+- Status: verified for release; every gate below passed before tagging.
 
 ## Automated evidence
 
@@ -30,4 +30,3 @@ SHA-256 values are stored in `docs/release-checksums-v2.0.0.txt`.
 
 - Windows SmartScreen reputation cannot be established without a trusted code-signing certificate.
 - Tray placement, notification appearance, and completion-sound loudness depend on local Windows settings and hardware.
-- Publishing the tag, GitHub Release, and versioned website downloads is a separate release action.
