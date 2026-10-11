@@ -78,3 +78,7 @@ V3.0.1 uses Squirrel's generated `com.squirrel.rurinagi.rurinagi` AppUserModelID
 
 Release verification now launches the hardened packaged `Rurinagi.exe` directly, hides it through the Windows close-window message, launches it again, and verifies that the original window returns. This closes the gap left by the earlier development-runtime-only restart test.
 
+## 2026-10-11 Provide Squirrel's uninstall icon explicitly
+
+V3.0.2 publishes the existing multi-size Rurinagi ICO with the static website and supplies its HTTPS URL through Squirrel's `iconUrl` metadata. Without this separate field, Squirrel defaults the Windows Apps & Features entry to Electron's icon even when the application executable and installer already use the Rurinagi logo.
+

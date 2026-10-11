@@ -1,7 +1,7 @@
 # Rurinagi V3 verification report
 
 Date: 2026-10-11  
-Version: `3.0.1`
+Version: `3.0.2`
 
 ## Automated verification
 
@@ -9,6 +9,7 @@ Version: `3.0.1`
 - Domain and storage: 15 tests passed, including privacy-sensitive defaults, the policy URL allowlist, rolling-week totals, previous-period comparison, project distribution, completion rate, streak calculation, timer recovery, import validation, and SQLite round trips.
 - Packaged Electron workflow: passed across first-run setup, setup persistence after restart, Today, Tasks, Focus, History, Insights, Settings, Quick Capture, task/project editing, themed controls, confirmations, timer and break behavior, tray hiding, restart recovery, export, import, backup, archive, deletion, and clear-data behavior.
 - Packaged Windows relaunch: passed by launching `Rurinagi.exe`, closing its window to the tray, launching the executable again, and verifying the existing Rurinagi window was restored while the redundant process exited.
+- Squirrel package metadata: the generated NuGet specification points `iconUrl` to the published Rurinagi ICO instead of Electron's fallback icon.
 - Dependency audit: `npm audit --audit-level=high` reported 0 vulnerabilities.
 - Diff hygiene: `git diff --check` passed.
 
@@ -24,9 +25,9 @@ Version: `3.0.1`
 
 ## Distributables
 
-- `Rurinagi-3.0.1-Setup.exe` — 154,308,608 bytes
-- `Rurinagi-win32-x64-3.0.1.zip` — 158,736,267 bytes
+- `Rurinagi-3.0.2-Setup.exe` — 154,308,096 bytes
+- `Rurinagi-win32-x64-3.0.2.zip` — 158,736,273 bytes
 
-SHA-256 values are stored in `docs/release-checksums-v3.0.1.txt`.
+SHA-256 values are stored in `docs/release-checksums-v3.0.2.txt`.
 
 The artifacts include the Rurinagi logo and third-party notices. The installer is intentionally unsigned for this personal and trusted-user release. SmartScreen and `Unknown publisher` behavior are disclosed on the website, in the README, and in the release notes; code signing remains a follow-up before broad or commercial distribution.
