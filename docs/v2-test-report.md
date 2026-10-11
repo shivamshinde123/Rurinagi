@@ -20,7 +20,7 @@ The packaged workflow covers navigation, task and project management, confirmed 
 ## Distribution artifacts
 
 - `Rurinagi-2.0.0-Setup.exe` — 153,980,928 bytes
-- `Rurinagi-win32-x64-2.0.0.zip` — 158,582,537 bytes
+- `Rurinagi-win32-x64-2.0.0.zip` — 158,582,532 bytes
 
 SHA-256 values are stored in `docs/release-checksums-v2.0.0.txt`.
 
