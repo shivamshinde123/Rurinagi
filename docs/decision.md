@@ -34,5 +34,7 @@ V2 adds the previously deferred Windows tray lifecycle and resolves the user-rep
 
 ## 2026-10-11 Separate archive, delete, create, and focus intent
 
-Archive remains a non-destructive organizational state, while Delete permanently removes only the task after explicit confirmation and preserves existing session history. Delete is blocked for a running or paused timer to preserve timer integrity. Add task uses a direct label and soft-green creation treatment, Start focus keeps the strongest filled emphasis, and native select controls retain their accessible semantics while receiving themed closed-control styling.
+Archive remains a non-destructive organizational state, while Delete permanently removes only the task after explicit confirmation and preserves existing session history. Delete is blocked for a running or paused timer to preserve timer integrity. Add task uses a direct label and soft-green creation treatment, and a second Add task action sits beside the emphasized Start focus control in the inspector.
+
+Native select popups cannot be consistently themed on Windows, so V2 uses one reusable in-app listbox control with keyboard navigation, selection state, focus handling, outside-click dismissal, and app-native surfaces. Destructive confirmations use reusable Rurinagi dialogs instead of operating-system browser prompts.
 

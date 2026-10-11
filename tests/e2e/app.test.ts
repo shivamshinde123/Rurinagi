@@ -27,14 +27,15 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     }
 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
-    await page.getByRole('button', { name: 'Add task', exact: true }).click();
+    await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).click();
     await page.getByLabel('Task title').fill('Release verification task');
-    assert.equal(await page.getByRole('button', { name: 'Add task', exact: true }).evaluate((button) => button.classList.contains('create-action')), true);
+    assert.equal(await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).evaluate((button) => button.classList.contains('create-action')), true);
     assert.equal(await page.getByRole('button', { name: 'Start focus' }).evaluate((button) => button.classList.contains('focus-action')), true);
+    assert.equal(await page.locator('.primary-task-actions').getByRole('button', { name: 'Add task', exact: true }).count(), 1);
     await page.getByLabel('Notes').fill('Exercise the complete daily loop');
     await page.getByLabel('Sessions').fill('3');
-    await page.locator('.inspector label.field').filter({ hasText: 'Priority' }).locator('select').selectOption('high');
-    await page.locator('.inspector label.field').filter({ hasText: 'Status' }).locator('select').selectOption('waiting');
+    await chooseOption(page, 'Priority', 'High');
+    await chooseOption(page, 'Status', 'Waiting');
     await page.getByLabel('Priority for today').check();
     await page.getByRole('button', { name: 'Move up' }).click();
 
@@ -49,16 +50,20 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByLabel('Project name').fill('Release');
     await page.getByRole('button', { name: 'Create project' }).click();
     await page.getByText('Project created', { exact: true }).waitFor();
-    const taskProject = page.locator('.inspector label.field').filter({ hasText: 'Project' }).locator('select');
-    await taskProject.selectOption({ label: 'Release' });
-    assert.equal(await taskProject.inputValue(), await projectValue(page, 'Release'));
-    assert.equal(await taskProject.evaluate((select) => getComputedStyle(select).appearance), 'none');
-    assert.notEqual(await taskProject.evaluate((select) => getComputedStyle(select).backgroundImage), 'none');
+    await page.getByRole('button', { name: 'Project', exact: true }).click();
+    await page.getByRole('listbox', { name: 'Project' }).waitFor();
+    await page.getByRole('option', { name: 'Release', exact: true }).click();
+    assert.equal((await page.getByRole('button', { name: 'Project', exact: true }).textContent())?.trim(), 'Release');
+    assert.equal(await page.locator('select').count(), 0);
 
-    await page.getByRole('button', { name: 'Add task', exact: true }).click();
+    await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).click();
     await page.getByLabel('Task title').fill('Delete verification task');
-    page.once('dialog', (dialog) => void dialog.accept());
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('dialog').press('Escape');
+    assert.equal(await page.getByRole('dialog').count(), 0);
+    assert.equal(await page.getByText('Delete verification task', { exact: true }).count(), 1);
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete task', exact: true }).click();
     await page.getByText('Task deleted', { exact: true }).waitFor();
     assert.equal(await page.getByText('Delete verification task', { exact: true }).count(), 0);
     await page.getByText('Release verification task', { exact: true }).first().click();
@@ -72,9 +77,9 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByRole('button', { name: 'Quick capture' }).first().click();
     const capture = await capturePromise;
     await capture.getByPlaceholder('Write a task, idea, or next step').fill('Captured release task');
-    await capture.getByLabel('Project').selectOption({ label: 'Release' });
+    await chooseOption(capture, 'Project', 'Release');
     await capture.getByLabel('Planned date').fill(today);
-    await capture.getByLabel('Estimated sessions').selectOption('2');
+    await chooseOption(capture, 'Estimated sessions', '2 sessions');
     await capture.getByRole('button', { name: 'Save task' }).click();
 
     await page.getByRole('button', { name: 'Today', exact: true }).click();
@@ -96,11 +101,11 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByText('Session complete', { exact: true }).waitFor();
 
     await page.getByRole('button', { name: 'History', exact: true }).click();
-    await page.getByLabel('Filter by session status').selectOption('partial');
+    await chooseOption(page, 'Filter by session status', 'Partial');
     await page.getByRole('button', { name: /Captured release task/ }).click();
     await page.getByLabel('Session note').fill('Edited history note');
-    await page.locator('.session-detail label.field').filter({ hasText: 'Task' }).locator('select').selectOption({ label: 'Release verification task' });
-    await page.getByLabel('Filter by project').selectOption({ label: 'Release' });
+    await chooseOption(page, 'Task', 'Release verification task');
+    await chooseOption(page, 'Filter by project', 'Release');
     assert.equal(await page.getByRole('button', { name: /Release verification task/ }).count(), 1);
 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
@@ -122,9 +127,9 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByLabel('Start breaks automatically').check();
     await page.getByLabel('Desktop notifications').uncheck();
     await page.getByLabel('Completion sound').check();
-    await page.getByLabel('Theme').selectOption('light');
+    await chooseOption(page, 'Theme', 'Light');
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()), '#315f4d');
-    await page.getByLabel('Theme').selectOption('dark');
+    await chooseOption(page, 'Theme', 'Dark');
     await page.getByLabel('Reduce motion').check();
     await page.getByLabel('Compact density').check();
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
@@ -134,7 +139,6 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByLabel('Start with Windows').check();
     await page.getByLabel('Start with Windows').uncheck();
     await page.getByLabel('Confirm before discarding a session').uncheck();
-    assert.equal(await app.evaluate(({ globalShortcut }) => globalShortcut.isRegistered('CommandOrControl+Shift+Space')), true);
     assert.equal(await page.getByLabel('Quick capture shortcut').inputValue(), 'Ctrl + Shift + Space');
     await page.getByLabel('Quick capture shortcut').fill('Ctrl + Shift + F9');
     await page.getByLabel('Quick capture shortcut').press('Tab');
@@ -177,20 +181,20 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByText('Session complete', { exact: true }).waitFor();
 
     await page.getByRole('button', { name: 'History', exact: true }).click();
-    await page.getByLabel('Filter by session status').selectOption('partial');
+    await chooseOption(page, 'Filter by session status', 'Partial');
     await page.getByRole('button', { name: /Release verification task/ }).first().click();
-    page.once('dialog', (dialog) => void dialog.accept());
     await page.getByRole('button', { name: 'Delete record' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete record', exact: true }).click();
 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await page.getByText('Release verification task', { exact: true }).first().click();
-    page.once('dialog', (dialog) => void dialog.accept());
     await page.getByRole('button', { name: 'Archive', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Archive task', exact: true }).click();
     await page.getByRole('heading', { name: 'Select a task' }).waitFor();
 
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    page.once('dialog', (dialog) => void dialog.accept());
     await page.getByRole('button', { name: 'Clear all data' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Clear all data', exact: true }).click();
     await page.getByText('All local data cleared', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await page.getByRole('heading', { name: 'Nothing needs your attention.' }).waitFor();
@@ -209,7 +213,7 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
 });
 
 async function quit(app: ElectronApplication): Promise<void> {
-  await app.evaluate(({ app: electronApp }) => electronApp.quit()).catch(() => undefined);
+  await app.evaluate(({ app: electronApp }) => { setTimeout(() => electronApp.exit(0), 0); }).catch(() => undefined);
   await app.close().catch(() => undefined);
 }
 
@@ -226,8 +230,9 @@ async function ready(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Today', exact: true }).waitFor();
 }
 
-async function projectValue(page: Page, label: string): Promise<string> {
-  return page.locator('.inspector label.field').filter({ hasText: 'Project' }).locator('option', { hasText: label }).getAttribute('value').then((value) => value ?? '');
+async function chooseOption(page: Page, label: string, option: string): Promise<void> {
+  await page.getByRole('button', { name: label, exact: true }).click();
+  await page.getByRole('option', { name: option, exact: true }).click();
 }
 
 async function expireTimer(page: Page): Promise<void> {

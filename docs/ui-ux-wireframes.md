@@ -53,7 +53,9 @@ A compact summary precedes a chronological, keyboard-readable session list. Stat
 
 Settings use labeled rows grouped under Timer, Appearance, Behavior, Data and privacy, and About. Destructive data clearing sits last and requires confirmation.
 
-Dropdowns use the same rounded surfaces, green focus treatment, spacing, and chevrons as the rest of the app instead of the browser's default closed-control styling. Task creation is a soft-green action; Start focus remains the emphasized filled action.
+Dropdowns use app-rendered listboxes with the same rounded surfaces, green focus treatment, spacing, selected-state checkmarks, and chevrons as the rest of the app. They support pointer, arrow-key, Enter, Escape, and focus dismissal behavior. Task creation is a soft-green action placed beside the emphasized filled Start focus action in the inspector.
+
+Destructive and archival confirmations appear as centered Rurinagi dialogs with clear consequences, explicit action labels, Cancel, focus treatment, and outside-click dismissal.
 
 ## Motion and accessibility
 

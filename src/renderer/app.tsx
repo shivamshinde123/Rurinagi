@@ -135,6 +135,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
   const [query, setQuery] = useState('');
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectName, setProjectName] = useState('');
+  const [confirmation, setConfirmation] = useState<'archive' | 'delete' | null>(null);
   const selected = state.tasks.find((task) => task.id === selectedId);
   const visible = state.tasks.filter((task) => task.status !== 'archived' && task.title.toLowerCase().includes(query.toLowerCase()));
   const add = () => {
@@ -170,21 +171,23 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
         {selected ? <>
           <div className="section-label">Task details</div>
           <input className="title-input" value={selected.title} aria-label="Task title" onChange={(event) => update({ title: event.target.value })} />
-          <Field label="Project"><select value={selected.projectId ?? ''} onChange={(event) => update({ projectId: event.target.value || null })}><option value="">Inbox</option>{state.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></Field>
+          <Field label="Project"><SelectControl ariaLabel="Project" value={selected.projectId ?? ''} onChange={(value) => update({ projectId: value || null })} options={[{ value: '', label: 'Inbox' }, ...state.projects.map((project) => ({ value: project.id, label: project.name }))]} /></Field>
           <Field label="Notes"><textarea value={selected.description} onChange={(event) => update({ description: event.target.value })} placeholder="Add a useful next step…" /></Field>
           <div className="field-grid"><Field label="Planned date"><input type="date" value={selected.dueDate ?? ''} onChange={(event) => update({ dueDate: event.target.value || null })} /></Field><Field label="Sessions"><input type="number" min="1" max="20" value={selected.estimateSessions} onChange={(event) => update({ estimateSessions: boundedInt(event.target.value, 1, 20) })} /></Field></div>
-          <div className="field-grid"><Field label="Priority"><select value={selected.priority} onChange={(event) => update({ priority: event.target.value as Priority })}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></Field><Field label="Status"><select value={selected.status} onChange={(event) => update({ status: event.target.value as TaskStatus })}><option value="inbox">Inbox</option><option value="planned">Planned</option><option value="waiting">Waiting</option><option value="complete">Complete</option></select></Field></div>
+          <div className="field-grid"><Field label="Priority"><SelectControl ariaLabel="Priority" value={selected.priority} onChange={(value) => update({ priority: value as Priority })} options={[{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }]} /></Field><Field label="Status"><SelectControl ariaLabel="Status" value={selected.status} onChange={(value) => update({ status: value as TaskStatus })} options={[{ value: 'inbox', label: 'Inbox' }, { value: 'planned', label: 'Planned' }, { value: 'waiting', label: 'Waiting' }, { value: 'complete', label: 'Complete' }]} /></Field></div>
           <label className="switch-row"><input type="checkbox" checked={selected.isToday} onChange={(event) => update({ isToday: event.target.checked, status: event.target.checked ? 'planned' : selected.status })} /><span>Priority for today</span></label>
           <div className="reorder-actions"><button className="button quiet" onClick={() => move(-1)}>Move up</button><button className="button quiet" onClick={() => move(1)}>Move down</button></div>
-          <button className="button primary focus-action wide" onClick={() => { commit(startFocus(state, selected.id)); navigate('focus'); }}><Icon name="play" />Start focus</button>
+          <div className="primary-task-actions"><button className="button primary focus-action" onClick={() => { commit(startFocus(state, selected.id)); navigate('focus'); }}><Icon name="play" />Start focus</button><button className="button create-action" onClick={add}><Icon name="plus" />Add task</button></div>
           <div className="inspector-actions">
-            <button className="button quiet" onClick={() => { if (confirm('Archive this task? You can keep its focus history.')) { commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, status: 'archived' } : task) }, 'Task archived'); setSelectedId(null); } }}>Archive</button>
-            <button className="button destructive destructive-outline" disabled={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status)} title={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status) ? 'End the active focus session before deleting this task' : 'Permanently delete task'} onClick={() => { if (confirm(`Permanently delete “${selected.title}”? Focus history will be kept. This cannot be undone.`)) { commit({ ...state, tasks: state.tasks.filter((task) => task.id !== selected.id) }, 'Task deleted'); setSelectedId(null); } }}>Delete</button>
+            <button className="button quiet" onClick={() => setConfirmation('archive')}>Archive</button>
+            <button className="button destructive destructive-outline" disabled={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status)} title={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status) ? 'End the active focus session before deleting this task' : 'Permanently delete task'} onClick={() => setConfirmation('delete')}>Delete</button>
           </div>
         </> : <Empty title="Select a task" body="Details and actions will appear here." />}
       </aside>
     </div>
     {creatingProject && <Modal title="New project" onClose={() => setCreatingProject(false)}><form onSubmit={addProject}><Field label="Project name"><input autoFocus value={projectName} maxLength={120} onChange={(event) => setProjectName(event.target.value)} /></Field><div className="modal-actions"><button className="button primary" type="submit" disabled={!projectName.trim()}>Create project</button><button className="button quiet" type="button" onClick={() => setCreatingProject(false)}>Cancel</button></div></form></Modal>}
+    {confirmation === 'archive' && selected && <ConfirmModal title="Archive this task?" body="It will leave your active lists, while its focus history stays available." confirmLabel="Archive task" onClose={() => setConfirmation(null)} onConfirm={() => { commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, status: 'archived' } : task) }, 'Task archived'); setSelectedId(null); setConfirmation(null); }} />}
+    {confirmation === 'delete' && selected && <ConfirmModal title="Delete this task permanently?" body={`“${selected.title}” will be removed. Focus history will be kept. This cannot be undone.`} confirmLabel="Delete task" destructive onClose={() => setConfirmation(null)} onConfirm={() => { commit({ ...state, tasks: state.tasks.filter((task) => task.id !== selected.id) }, 'Task deleted'); setSelectedId(null); setConfirmation(null); }} />}
   </>;
 }
 
@@ -228,20 +231,23 @@ function History({ state, commit }: { state: AppState; commit: Commit }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [outcome, setOutcome] = useState('all');
   const [projectId, setProjectId] = useState('all');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const filtered = state.sessions.filter((session) => (outcome === 'all' || session.outcome === outcome) && (projectId === 'all' || session.projectId === projectId));
   const sessionsByDay = useMemo(() => groupSessions(filtered), [filtered]);
   const chosen = state.sessions.find((session) => session.id === selected);
   return <>
-    <PageHeader title="History" subtitle="A quiet record of where your attention went." actions={<div className="history-filters"><select aria-label="Filter by project" value={projectId} onChange={(event) => setProjectId(event.target.value)}><option value="all">All projects</option>{state.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select><select aria-label="Filter by session status" value={outcome} onChange={(event) => setOutcome(event.target.value)}><option value="all">All statuses</option><option value="completed">Completed</option><option value="partial">Partial</option><option value="interrupted">Interrupted</option></select></div>} />
+    <PageHeader title="History" subtitle="A quiet record of where your attention went." actions={<div className="history-filters"><SelectControl ariaLabel="Filter by project" value={projectId} onChange={setProjectId} options={[{ value: 'all', label: 'All projects' }, ...state.projects.map((project) => ({ value: project.id, label: project.name }))]} /><SelectControl ariaLabel="Filter by session status" value={outcome} onChange={setOutcome} options={[{ value: 'all', label: 'All statuses' }, { value: 'completed', label: 'Completed' }, { value: 'partial', label: 'Partial' }, { value: 'interrupted', label: 'Interrupted' }]} /></div>} />
     <div className="history-summary"><Metric value={humanMinutes(focusedSecondsToday(state))} label="Focused today" /><Metric value={humanMinutes(state.sessions.reduce((sum, session) => sum + session.actualSeconds, 0))} label="All focus" /><Metric value={String(state.sessions.filter((session) => session.outcome === 'completed').length)} label="Completed sessions" /></div>
     <div className="history-layout"><section className="card session-list">
       {filtered.length === 0 && <Empty title={state.sessions.length ? 'No matching sessions.' : 'No sessions yet.'} body="Completed and partial focus sessions will appear here." />}
       {[...sessionsByDay.entries()].map(([day, sessions]) => <div className="session-day" key={day}><h2>{formatDay(day)}</h2>{sessions.map((session) => <SessionRow key={session.id} session={session} state={state} selected={selected === session.id} onClick={() => setSelected(session.id)} />)}</div>)}
-    </section>{chosen && <aside className="card session-detail"><div className="section-label">Session details</div><h2>{taskById(state, chosen.taskId)?.title ?? 'Deleted task'}</h2><p>{new Date(chosen.startedAt).toLocaleString()} · {focusDuration(chosen.actualSeconds)}</p><Field label="Task"><select value={chosen.taskId ?? ''} onChange={(event) => { const task = taskById(state, event.target.value); commit({ ...state, sessions: state.sessions.map((session) => session.id === chosen.id ? { ...session, taskId: task?.id ?? null, projectId: task?.projectId ?? null } : session) }, 'Session updated'); }}><option value="">No task</option>{state.tasks.filter((task) => task.status !== 'archived').map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}</select></Field><Field label="Session note"><textarea value={chosen.note} onChange={(event) => commit({ ...state, sessions: state.sessions.map((session) => session.id === chosen.id ? { ...session, note: event.target.value } : session) })} /></Field><button className="button destructive quiet wide" onClick={() => { if (confirm('Delete this session record?')) { commit({ ...state, sessions: state.sessions.filter((session) => session.id !== chosen.id) }, 'Session deleted'); setSelected(null); } }}>Delete record</button></aside>}</div>
+    </section>{chosen && <aside className="card session-detail"><div className="section-label">Session details</div><h2>{taskById(state, chosen.taskId)?.title ?? 'Deleted task'}</h2><p>{new Date(chosen.startedAt).toLocaleString()} · {focusDuration(chosen.actualSeconds)}</p><Field label="Task"><SelectControl ariaLabel="Task" value={chosen.taskId ?? ''} onChange={(value) => { const task = taskById(state, value); commit({ ...state, sessions: state.sessions.map((session) => session.id === chosen.id ? { ...session, taskId: task?.id ?? null, projectId: task?.projectId ?? null } : session) }, 'Session updated'); }} options={[{ value: '', label: 'No task' }, ...state.tasks.filter((task) => task.status !== 'archived').map((task) => ({ value: task.id, label: task.title }))]} /></Field><Field label="Session note"><textarea value={chosen.note} onChange={(event) => commit({ ...state, sessions: state.sessions.map((session) => session.id === chosen.id ? { ...session, note: event.target.value } : session) })} /></Field><button className="button destructive quiet wide" onClick={() => setConfirmDelete(true)}>Delete record</button></aside>}</div>
+    {confirmDelete && chosen && <ConfirmModal title="Delete this session record?" body="This focus record and its note will be removed permanently." confirmLabel="Delete record" destructive onClose={() => setConfirmDelete(false)} onConfirm={() => { commit({ ...state, sessions: state.sessions.filter((session) => session.id !== chosen.id) }, 'Session deleted'); setSelected(null); setConfirmDelete(false); }} />}
   </>;
 }
 
 function SettingsScreen({ state, commit, setToast }: { state: AppState; commit: Commit; setToast: (toast: string) => void }) {
+  const [confirmClear, setConfirmClear] = useState(false);
   const update = (patch: Partial<Settings>) => commit({ ...state, settings: { ...state.settings, ...patch } });
   const action = async (kind: 'export' | 'import' | 'backup') => {
     try {
@@ -253,11 +259,12 @@ function SettingsScreen({ state, commit, setToast }: { state: AppState; commit: 
     <PageHeader title="Settings" subtitle="Shape Rurinagi around the way you work." />
     <div className="settings-stack">
       <SettingsGroup title="Timer"><SettingNumber label="Focus duration" value={state.settings.focusMinutes} suffix="min" onChange={(value) => update({ focusMinutes: value })} /><SettingNumber label="Short break" value={state.settings.shortBreakMinutes} suffix="min" onChange={(value) => update({ shortBreakMinutes: value })} /><SettingNumber label="Long break" value={state.settings.longBreakMinutes} suffix="min" onChange={(value) => update({ longBreakMinutes: value })} /><SettingNumber label="Sessions before long break" value={state.settings.sessionsBeforeLongBreak} onChange={(value) => update({ sessionsBeforeLongBreak: value })} /><SettingToggle label="Start breaks automatically" checked={state.settings.autoStartBreaks} onChange={(checked) => update({ autoStartBreaks: checked })} /><SettingToggle label="Desktop notifications" checked={state.settings.notifications} onChange={(checked) => update({ notifications: checked })} /><SettingToggle label="Completion sound" checked={state.settings.sound} onChange={(checked) => update({ sound: checked })} /></SettingsGroup>
-      <SettingsGroup title="Appearance"><div className="setting-row"><div><strong>Theme</strong><small>Match your workspace.</small></div><select aria-label="Theme" value={state.settings.theme} onChange={(event) => update({ theme: event.target.value as Settings['theme'] })}><option value="system">Follow system</option><option value="light">Light</option><option value="dark">Dark</option></select></div><SettingToggle label="Reduce motion" checked={state.settings.reducedMotion} onChange={(checked) => update({ reducedMotion: checked })} /><SettingToggle label="Compact density" checked={state.settings.compactDensity} onChange={(checked) => update({ compactDensity: checked })} /></SettingsGroup>
+      <SettingsGroup title="Appearance"><div className="setting-row"><div><strong>Theme</strong><small>Match your workspace.</small></div><SelectControl ariaLabel="Theme" value={state.settings.theme} onChange={(value) => update({ theme: value as Settings['theme'] })} options={[{ value: 'system', label: 'Follow system' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} /></div><SettingToggle label="Reduce motion" checked={state.settings.reducedMotion} onChange={(checked) => update({ reducedMotion: checked })} /><SettingToggle label="Compact density" checked={state.settings.compactDensity} onChange={(checked) => update({ compactDensity: checked })} /></SettingsGroup>
       <SettingsGroup title="Behavior"><SettingToggle label="Start with Windows" checked={state.settings.startWithWindows} onChange={(checked) => update({ startWithWindows: checked })} /><SettingToggle label="Confirm before discarding a session" checked={state.settings.confirmDiscard} onChange={(checked) => update({ confirmDiscard: checked })} /><ShortcutInput value={state.settings.quickCaptureShortcut} onChange={(quickCaptureShortcut) => update({ quickCaptureShortcut })} /></SettingsGroup>
-      <SettingsGroup title="Data and privacy"><p className="privacy-copy">Your tasks and focus history are stored locally on this device.</p><div className="data-actions"><button className="button secondary" onClick={() => void action('export')}>Export data</button><button className="button secondary" onClick={() => void action('import')}>Import data</button><button className="button secondary" onClick={() => void action('backup')}>Back up database</button></div><button className="button destructive quiet" onClick={async () => { if (confirm('Clear every task and session? This cannot be undone.')) commit(await window.rurinagi.clearData(), 'All local data cleared'); }}>Clear all data</button></SettingsGroup>
+      <SettingsGroup title="Data and privacy"><p className="privacy-copy">Your tasks and focus history are stored locally on this device.</p><div className="data-actions"><button className="button secondary" onClick={() => void action('export')}>Export data</button><button className="button secondary" onClick={() => void action('import')}>Import data</button><button className="button secondary" onClick={() => void action('backup')}>Back up database</button></div><button className="button destructive quiet" onClick={() => setConfirmClear(true)}>Clear all data</button></SettingsGroup>
       <SettingsGroup title="About"><div className="about-row"><Logo /><div><strong>Rurinagi</strong><small>Version 2.0.0 · Private by design</small></div></div></SettingsGroup>
     </div>
+    {confirmClear && <ConfirmModal title="Clear all local data?" body="Every task, project, focus record, and note will be permanently removed. This cannot be undone." confirmLabel="Clear all data" destructive onClose={() => setConfirmClear(false)} onConfirm={() => { void window.rurinagi.clearData().then((next) => { commit(next, 'All local data cleared'); setConfirmClear(false); }).catch((cause: unknown) => setToast(`Clear failed: ${message(cause)}`)); }} />}
   </>;
 }
 
@@ -268,7 +275,7 @@ function QuickCapture({ state, commit }: { state: AppState; commit: Commit }) {
     const task: Task = { id: crypto.randomUUID(), title: clean, description: '', projectId: projectId || null, priority: 'normal', dueDate: date || null, estimateSessions: estimate, status: date === localDate() ? 'planned' : 'inbox', sortOrder: state.tasks.length, isToday: date === localDate(), createdAt: new Date().toISOString(), completedAt: null };
     commit({ ...state, tasks: [...state.tasks, task] }, 'Captured'); setTitle(''); void window.rurinagi.completeCapture();
   };
-  return <main className="capture-window"><div className="capture-brand"><Logo /><span>Quick capture</span></div><form onSubmit={submit}><label className="capture-title"><span>What needs your attention?</span><input autoFocus value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Write a task, idea, or next step" /></label><div className="capture-fields"><select aria-label="Project" value={projectId} onChange={(event) => setProjectId(event.target.value)}><option value="">Inbox</option>{state.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select><input aria-label="Planned date" type="date" value={date} onChange={(event) => setDate(event.target.value)} /><select aria-label="Estimated sessions" value={estimate} onChange={(event) => setEstimate(Number(event.target.value))}><option value="1">1 session</option><option value="2">2 sessions</option><option value="3">3 sessions</option><option value="4">4 sessions</option></select></div><div className="capture-footer"><span><kbd>Enter</kbd> to save</span><button className="button primary" disabled={!title.trim()} type="submit">Save task</button></div></form></main>;
+  return <main className="capture-window"><div className="capture-brand"><Logo /><span>Quick capture</span></div><form onSubmit={submit}><label className="capture-title"><span>What needs your attention?</span><input autoFocus value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Write a task, idea, or next step" /></label><div className="capture-fields"><SelectControl ariaLabel="Project" value={projectId} onChange={setProjectId} options={[{ value: '', label: 'Inbox' }, ...state.projects.map((project) => ({ value: project.id, label: project.name }))]} /><input aria-label="Planned date" type="date" value={date} onChange={(event) => setDate(event.target.value)} /><SelectControl ariaLabel="Estimated sessions" value={String(estimate)} onChange={(value) => setEstimate(Number(value))} options={[1, 2, 3, 4].map((value) => ({ value: String(value), label: `${value} session${value === 1 ? '' : 's'}` }))} /></div><div className="capture-footer"><span><kbd>Enter</kbd> to save</span><button className="button primary" disabled={!title.trim()} type="submit">Save task</button></div></form></main>;
 }
 
 function TaskRow({ task, state, selected, onToggle, onOpen }: { task: Task; state: AppState; selected?: boolean; onToggle: () => void; onOpen?: () => void }) {
@@ -309,7 +316,50 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (value: s
   };
   return <div className="setting-row"><div><strong>Quick capture shortcut</strong><small>Works while Rurinagi is running.</small></div><input aria-label="Quick capture shortcut" value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }} /></div>;
 }
-function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) { return <div className="scrim" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><h2 id="modal-title">{title}</h2>{children}</div></div>; }
+function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+  const dialog = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    const escape = (event: KeyboardEvent): void => { if (event.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('keydown', escape); previous?.focus(); };
+  }, []);
+  const trapFocus = (event: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (event.key !== 'Tab') return;
+    const items = [...(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])') ?? [])];
+    if (items.length === 0) return;
+    const first = items[0]!; const last = items[items.length - 1]!;
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  };
+  return <div className="scrim" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div ref={dialog} className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onKeyDown={trapFocus}><h2 id="modal-title">{title}</h2>{children}</div></div>;
+}
+function ConfirmModal({ title, body, confirmLabel, destructive, onConfirm, onClose }: { title: string; body: string; confirmLabel: string; destructive?: boolean; onConfirm: () => void; onClose: () => void }) { return <Modal title={title} onClose={onClose}><p>{body}</p><div className="modal-actions"><button className={`button ${destructive ? 'destructive destructive-outline' : 'primary'}`} onClick={onConfirm}>{confirmLabel}</button><button className="button quiet" autoFocus onClick={onClose}>Cancel</button></div></Modal>; }
+type SelectOption = { value: string; label: string };
+function SelectControl({ ariaLabel, value, options, onChange }: { ariaLabel: string; value: string; options: readonly SelectOption[]; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const selected = options.find((option) => option.value === value) ?? options[0];
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent): void => { if (!root.current?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('pointerdown', close);
+    requestAnimationFrame(() => menu.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus());
+    return () => document.removeEventListener('pointerdown', close);
+  }, [open]);
+  const move = (event: React.KeyboardEvent<HTMLButtonElement>, offset: number): void => {
+    event.preventDefault();
+    const items = [...(menu.current?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? [])];
+    const index = items.indexOf(event.currentTarget);
+    items[(index + offset + items.length) % items.length]?.focus();
+  };
+  return <div className={`select-control ${open ? 'open' : ''}`} ref={root} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
+    <button ref={trigger} type="button" className="select-trigger" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((current) => !current)} onKeyDown={(event) => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setOpen(true); } }}>{selected?.label ?? 'Select'}<span className="select-chevron" aria-hidden="true" /></button>
+    {open && <div className="select-menu" role="listbox" aria-label={ariaLabel} ref={menu}>{options.map((option) => <button type="button" role="option" aria-selected={option.value === value} key={option.value} onClick={() => { onChange(option.value); setOpen(false); trigger.current?.focus(); }} onKeyDown={(event) => { if (event.key === 'ArrowDown') move(event, 1); else if (event.key === 'ArrowUp') move(event, -1); else if (event.key === 'Escape') { setOpen(false); trigger.current?.focus(); } }}>{option.label}{option.value === value && <Icon name="check" />}</button>)}</div>}
+  </div>;
+}
 function ProjectDot({ project }: { project?: Project }) { return <span className="project-dot" style={{ background: project?.color ?? '#9A9AA1' }} />; }
 function Logo() { return <span className="logo" aria-label="Rurinagi"><svg viewBox="0 0 36 36" role="img"><path d="M7 19c4-7 8-9 12-5 4 4 6 3 10-2" /><path d="M7 24c5-4 9-4 13-1 3 2 6 1 9-2" /></svg></span>; }
 
