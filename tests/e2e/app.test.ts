@@ -27,9 +27,9 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     }
 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
-    await page.getByRole('button', { name: 'New task' }).click();
+    await page.getByRole('button', { name: 'Add task', exact: true }).click();
     await page.getByLabel('Task title').fill('Release verification task');
-    assert.equal(await page.getByRole('button', { name: 'New task' }).evaluate((button) => button.classList.contains('create-action')), true);
+    assert.equal(await page.getByRole('button', { name: 'Add task', exact: true }).evaluate((button) => button.classList.contains('create-action')), true);
     assert.equal(await page.getByRole('button', { name: 'Start focus' }).evaluate((button) => button.classList.contains('focus-action')), true);
     await page.getByLabel('Notes').fill('Exercise the complete daily loop');
     await page.getByLabel('Sessions').fill('3');
@@ -55,7 +55,7 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     assert.equal(await taskProject.evaluate((select) => getComputedStyle(select).appearance), 'none');
     assert.notEqual(await taskProject.evaluate((select) => getComputedStyle(select).backgroundImage), 'none');
 
-    await page.getByRole('button', { name: 'New task' }).click();
+    await page.getByRole('button', { name: 'Add task', exact: true }).click();
     await page.getByLabel('Task title').fill('Delete verification task');
     page.once('dialog', (dialog) => void dialog.accept());
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -166,7 +166,7 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await page.getByText('Release verification task', { exact: true }).first().click();
     await page.getByRole('button', { name: 'Start focus' }).click();
-    await app.close();
+    await quit(app);
     app = undefined;
 
     ({ app, page } = await launch(profile, errors));
@@ -203,10 +203,15 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
 
     assert.deepEqual(errors, []);
   } finally {
-    await app?.close().catch(() => undefined);
+    if (app) await quit(app);
     rmSync(profile, { recursive: true, force: true });
   }
 });
+
+async function quit(app: ElectronApplication): Promise<void> {
+  await app.evaluate(({ app: electronApp }) => electronApp.quit()).catch(() => undefined);
+  await app.close().catch(() => undefined);
+}
 
 async function launch(profile: string, errors: string[]): Promise<{ app: ElectronApplication; page: Page }> {
   const env = Object.fromEntries(Object.entries(process.env).filter(([key, value]) => key !== 'ELECTRON_RUN_AS_NODE' && value !== undefined)) as Record<string, string>;
