@@ -7,6 +7,7 @@
   "main": ".vite/build/main.cjs",
   "private": true,
   "scripts": {
+    "assets:logo": "node scripts/build-logo-assets.mjs",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",

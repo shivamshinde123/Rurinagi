@@ -58,7 +58,8 @@ h1, h2, h3 { text-wrap: balance; }
 .sidebar { display: flex; flex-direction: column; gap: 2.2rem; padding: 1.4rem 1rem 1.15rem; background: var(--sidebar); border-right: 1px solid var(--line); backdrop-filter: blur(24px) saturate(150%); z-index: 2; }
 .brand { display: flex; align-items: center; gap: .75rem; padding: 0 .65rem; font-size: 1.05rem; font-weight: 650; letter-spacing: -.015em; }
 .logo { display: inline-grid; place-items: center; width: 2.2rem; height: 2.2rem; flex: 0 0 auto; border-radius: .75rem; color: white; background: linear-gradient(145deg, #3f6d59, #17392d); box-shadow: 0 7px 18px rgba(23, 57, 45, .25); }
-.logo svg { width: 1.7rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.logo svg { width: 1.72rem; fill: none; stroke: currentColor; stroke-width: 40; stroke-linecap: round; }
+.logo-current { color: #b9d7c7; }
 .sidebar nav { display: grid; gap: .3rem; }
 .nav-item { display: flex; align-items: center; gap: .8rem; min-height: 2.85rem; padding: .65rem .8rem; border: 0; border-radius: .75rem; background: transparent; color: var(--text-secondary); text-align: left; transition: transform 160ms ease, background 180ms ease, color 180ms ease; }
 .nav-item:hover { background: color-mix(in srgb, var(--surface-solid) 48%, transparent); color: var(--text); }

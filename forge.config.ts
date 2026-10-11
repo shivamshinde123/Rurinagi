@@ -7,8 +7,8 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
 const config: ForgeConfig = {
-  packagerConfig: { asar: true, executableName: 'Rurinagi' },
-  makers: [new MakerSquirrel({ name: 'rurinagi', setupExe: 'Rurinagi-3.0.0-Setup.exe' }), new MakerZIP({}, ['win32'])],
+  packagerConfig: { asar: true, executableName: 'Rurinagi', icon: 'resources/rurinagi-icon.ico', extraResource: ['resources/rurinagi-logo.png'] },
+  makers: [new MakerSquirrel({ name: 'rurinagi', setupExe: 'Rurinagi-3.0.0-Setup.exe', setupIcon: 'resources/rurinagi-icon.ico' }), new MakerZIP({}, ['win32'])],
   plugins: [
     new AutoUnpackNativesPlugin({}),
     new VitePlugin({

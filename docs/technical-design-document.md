@@ -26,6 +26,7 @@ SQLite contains migrations plus the current state document. Writes use a transac
 - Start-with-Windows uses the operating-system login-item setting.
 - One process-owned tray instance provides Show Rurinagi, Quick capture, and Quit commands. Closing the main window hides it; only explicit Quit tears down the tray, shortcuts, windows, and storage.
 - Shortcut settings render in Windows-friendly notation but are normalized to Electron accelerator syntax before persistence and registration.
+- `resources/rurinagi-logo.svg` is the brand source of truth. The existing Playwright development dependency reproducibly renders its PNG and multi-resolution ICO derivatives; Electron Forge embeds the ICO and copies the PNG for runtime windows and tray use.
 
 ## Error handling
 

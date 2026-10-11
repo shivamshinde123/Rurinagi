@@ -2,9 +2,9 @@
 
 ## V3 desktop shell
 
-- Main window: hosts the full planning and focus experience; close hides it to the tray.
+- Main window: hosts the full planning and focus experience, uses the packaged Rurinagi icon, and hides to the tray on close.
 - Quick Capture window: captures a task without restoring the full application.
-- Tray: owns Show Rurinagi, Quick capture, and Quit commands for the running process.
+- Tray: uses the Rurinagi mark and owns Show Rurinagi, Quick capture, and Quit commands for the running process.
 - Settings shortcut input: translates readable Windows notation to the persisted Electron accelerator.
 
 ## Desktop processes
@@ -31,6 +31,7 @@ V3 keeps the connected screen components together in `src/renderer/app.tsx` beca
 - `SelectControl`: reusable themed listbox used by task editing, Quick Capture, History filters, session reassignment, and Settings.
 - `CalendarControl`: reusable themed planned-date picker used by task editing and Quick Capture while preserving local `YYYY-MM-DD` values.
 - `ConfirmModal`: reusable in-app confirmation surface for archive and destructive actions.
+- `Logo`: shared two-current Rurinagi mark used by the sidebar, loading/error states, Quick Capture, and About.
 
 ## Shared domain
 
