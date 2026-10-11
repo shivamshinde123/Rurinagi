@@ -80,7 +80,7 @@ function Sidebar({ active, onNavigate }: { active: Screen; onNavigate: (screen: 
 
 function Toolbar({ onCapture }: { onCapture: () => void }) {
   const date = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
-  return <header className="toolbar"><span>{date}</span><div className="toolbar-actions"><button className="icon-button" aria-label="Search" title="Search (Ctrl+K)"><Icon name="search" /></button><button className="icon-button emphasized" aria-label="Quick capture" title="Quick capture" onClick={onCapture}><Icon name="plus" /></button><button className="icon-button" aria-label="More options" title="More options"><Icon name="more" /></button></div></header>;
+  return <header className="toolbar"><span>{date}</span><div className="toolbar-actions"><button className="icon-button emphasized" aria-label="Quick capture" title="Quick capture" onClick={onCapture}><Icon name="plus" /></button></div></header>;
 }
 
 type Commit = (state: AppState, notice?: string) => void;
@@ -133,16 +133,20 @@ function TimerCard({ state, next, onStart, onFocus }: { state: AppState; next?: 
 function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; navigate: (screen: Screen) => void }) {
   const [selectedId, setSelectedId] = useState<string | null>(state.tasks.find((task) => task.status !== 'archived')?.id ?? null);
   const [query, setQuery] = useState('');
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [projectName, setProjectName] = useState('');
   const selected = state.tasks.find((task) => task.id === selectedId);
   const visible = state.tasks.filter((task) => task.status !== 'archived' && task.title.toLowerCase().includes(query.toLowerCase()));
   const add = () => {
     const task: Task = { id: crypto.randomUUID(), title: 'New task', description: '', projectId: null, priority: 'normal', dueDate: localDate(), estimateSessions: 1, status: 'inbox', sortOrder: state.tasks.length, isToday: false, createdAt: new Date().toISOString(), completedAt: null };
     commit({ ...state, tasks: [...state.tasks, task] }); setSelectedId(task.id);
   };
-  const addProject = () => {
-    const name = prompt('Project name')?.trim();
+  const addProject = (event: FormEvent) => {
+    event.preventDefault();
+    const name = projectName.trim();
     if (!name) return;
     commit({ ...state, projects: [...state.projects, { id: crypto.randomUUID(), name: name.slice(0, 120), color: '#456FAE' }] }, 'Project created');
+    setProjectName(''); setCreatingProject(false);
   };
   const update = (patch: Partial<Task>) => selected && commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, ...patch } : task) });
   const move = (direction: -1 | 1) => {
@@ -155,7 +159,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
   };
   const groups = [['Today', visible.filter((task) => task.isToday)], ['Tomorrow', visible.filter((task) => task.dueDate && task.dueDate > localDate() && !task.isToday)], ['Later', visible.filter((task) => !task.isToday && (!task.dueDate || task.dueDate <= localDate()))]] as const;
   return <>
-    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={addProject}>New project</button><button className="button primary" onClick={add}><Icon name="plus" />New task</button></div>} />
+    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button primary" onClick={add}><Icon name="plus" />New task</button></div>} />
     <div className="tasks-layout">
       <section className="task-browser card">
         <label className="search-field"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks" aria-label="Search tasks" /></label>
@@ -177,6 +181,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
         </> : <Empty title="Select a task" body="Details and actions will appear here." />}
       </aside>
     </div>
+    {creatingProject && <Modal title="New project" onClose={() => setCreatingProject(false)}><form onSubmit={addProject}><Field label="Project name"><input autoFocus value={projectName} maxLength={120} onChange={(event) => setProjectName(event.target.value)} /></Field><div className="modal-actions"><button className="button primary" type="submit" disabled={!projectName.trim()}>Create project</button><button className="button quiet" type="button" onClick={() => setCreatingProject(false)}>Cancel</button></div></form></Modal>}
   </>;
 }
 
@@ -208,7 +213,7 @@ function Focus({ state, commit }: { state: AppState; commit: Commit }) {
     <ProgressRing progress={progress}><strong>{formatDuration(seconds)}</strong></ProgressRing>
     <div className="actions centered">
       {timer.status === 'running' ? <button className="button primary large" onClick={() => commit(pauseTimer(state))}>Pause</button> : <button className="button primary large" onClick={() => commit(resumeTimer(state))}>Resume</button>}
-      <button className="button secondary" onClick={() => isBreak ? commit(discardTimer(state), 'Break skipped') : setConfirmEnd(true)}>{isBreak ? 'Skip break' : 'End session'}</button>
+      <button className="button secondary" onClick={() => isBreak ? commit(discardTimer(state), 'Break skipped') : state.settings.confirmDiscard ? setConfirmEnd(true) : commit(finishTimer(state, 'partial'), 'Partial session saved')}>{isBreak ? 'Skip break' : 'End session'}</button>
     </div>
     {!isBreak && <label className="session-note"><span>Add session note</span><textarea value={state.sessionNote} onChange={(event) => commit({ ...state, sessionNote: event.target.value })} placeholder="What are you working through?" /></label>}
     {!isBreak && <span className="next-break">Break: {state.settings.shortBreakMinutes} minutes</span>}
@@ -265,7 +270,7 @@ function QuickCapture({ state, commit }: { state: AppState; commit: Commit }) {
 
 function TaskRow({ task, state, selected, onToggle, onOpen }: { task: Task; state: AppState; selected?: boolean; onToggle: () => void; onOpen?: () => void }) {
   const project = projectFor(state, task.projectId); const complete = task.status === 'complete'; const overdue = task.dueDate ? task.dueDate < localDate() && !complete : false;
-  return <div className={`task-row ${selected ? 'selected' : ''} ${complete ? 'done' : ''}`}><button className="checkbox" aria-label={complete ? `Reopen ${task.title}` : `Complete ${task.title}`} aria-pressed={complete} onClick={onToggle}>{complete && <Icon name="check" />}</button><button className="task-content" onClick={onOpen}><span>{task.title}</span><small>{project && <><ProjectDot project={project} />{project.name}</>}{task.estimateSessions > 0 && ` · ${task.estimateSessions * state.settings.focusMinutes} min`}{overdue && <b className="overdue"> · Overdue</b>}</small></button><button className="row-more" aria-label={`More options for ${task.title}`} title="More options"><Icon name="more" /></button></div>;
+  return <div className={`task-row ${selected ? 'selected' : ''} ${complete ? 'done' : ''}`}><button className="checkbox" aria-label={complete ? `Reopen ${task.title}` : `Complete ${task.title}`} aria-pressed={complete} onClick={onToggle}>{complete && <Icon name="check" />}</button><button className="task-content" onClick={onOpen}><span>{task.title}</span><small>{project && <><ProjectDot project={project} />{project.name}</>}{task.estimateSessions > 0 && ` · ${task.estimateSessions * state.settings.focusMinutes} min`}{overdue && <b className="overdue"> · Overdue</b>}</small></button></div>;
 }
 
 function SessionRow({ session, state, selected, onClick }: { session: Session; state: AppState; selected: boolean; onClick: () => void }) {

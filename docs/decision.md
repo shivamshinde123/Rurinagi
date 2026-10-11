@@ -20,3 +20,11 @@ A running timer persists its end timestamp instead of writing once per second. T
 
 The UI uses immediate press feedback, system typography, translucent navigation, solid content surfaces, symmetric panel motion, and reduced-motion alternatives. It retains Windows window controls and keyboard behavior instead of imitating macOS chrome.
 
+## 2026-10-11 Publish compiled downloads without publishing source
+
+The project website is a dependency-free static site deployed with GitHub Actions. Publishing a tagged GitHub Release triggers Pages to fetch those exact versioned assets and inject them into the public site artifact, so website downloads match the recorded checksums byte-for-byte. If the GitHub account plan does not support Pages from private repositories, a public site-only repository is the fallback; the application repository remains private.
+
+## 2026-10-11 Gate tags on full release verification
+
+Version tags are created only after TypeScript validation, domain tests, SQLite round-trip tests, packaged Electron end-to-end workflows, dependency audit, distributable creation, checksum generation, and website browser QA pass. The V1 audit replaced an unsupported browser prompt with an in-app project modal, honored the discard-confirmation setting, hardened imported-state validation, and removed inert controls.
+
