@@ -32,3 +32,7 @@ Version tags are created only after TypeScript validation, domain tests, SQLite 
 
 V2 adds the previously deferred Windows tray lifecycle and resolves the user-reported visual issues without expanding into analytics, accounts, or integrations. The main window closes to the tray; its menu restores the app, opens Quick Capture, or exits explicitly. The UI adopts the website palette (`#315F4D` and `#17392D`) with lighter related greens in dark mode for contrast. Task project metadata uses an explicit layout gap, and shortcut settings translate `CommandOrControl+Shift+Space` to the readable `Ctrl + Shift + Space` presentation without breaking persisted accelerators.
 
+## 2026-10-11 Separate archive, delete, create, and focus intent
+
+Archive remains a non-destructive organizational state, while Delete permanently removes only the task after explicit confirmation and preserves existing session history. Delete is blocked for a running or paused timer to preserve timer integrity. New task uses a soft-green creation treatment, Start focus keeps the strongest filled emphasis, and native select controls retain their accessible semantics while receiving themed closed-control styling.
+

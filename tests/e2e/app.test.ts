@@ -29,6 +29,8 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await page.getByRole('button', { name: 'New task' }).click();
     await page.getByLabel('Task title').fill('Release verification task');
+    assert.equal(await page.getByRole('button', { name: 'New task' }).evaluate((button) => button.classList.contains('create-action')), true);
+    assert.equal(await page.getByRole('button', { name: 'Start focus' }).evaluate((button) => button.classList.contains('focus-action')), true);
     await page.getByLabel('Notes').fill('Exercise the complete daily loop');
     await page.getByLabel('Sessions').fill('3');
     await page.locator('.inspector label.field').filter({ hasText: 'Priority' }).locator('select').selectOption('high');
@@ -50,6 +52,16 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     const taskProject = page.locator('.inspector label.field').filter({ hasText: 'Project' }).locator('select');
     await taskProject.selectOption({ label: 'Release' });
     assert.equal(await taskProject.inputValue(), await projectValue(page, 'Release'));
+    assert.equal(await taskProject.evaluate((select) => getComputedStyle(select).appearance), 'none');
+    assert.notEqual(await taskProject.evaluate((select) => getComputedStyle(select).backgroundImage), 'none');
+
+    await page.getByRole('button', { name: 'New task' }).click();
+    await page.getByLabel('Task title').fill('Delete verification task');
+    page.once('dialog', (dialog) => void dialog.accept());
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByText('Task deleted', { exact: true }).waitFor();
+    assert.equal(await page.getByText('Delete verification task', { exact: true }).count(), 0);
+    await page.getByText('Release verification task', { exact: true }).first().click();
 
     const today = await page.evaluate(() => {
       const now = new Date();
@@ -173,7 +185,7 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await page.getByText('Release verification task', { exact: true }).first().click();
     page.once('dialog', (dialog) => void dialog.accept());
-    await page.getByRole('button', { name: 'Archive task' }).click();
+    await page.getByRole('button', { name: 'Archive', exact: true }).click();
     await page.getByRole('heading', { name: 'Select a task' }).waitFor();
 
     await page.getByRole('button', { name: 'Settings', exact: true }).click();

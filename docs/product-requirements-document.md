@@ -11,7 +11,7 @@ The primary user is an individual Windows user managing personal work such as jo
 ## Required experiences
 
 - Today shows up to three priorities, overdue work, the active task, timer state, and a compact daily summary.
-- Tasks supports create, edit, complete, reopen, archive, reorder, project assignment, priority, date, description, and session estimate.
+- Tasks supports create, edit, complete, reopen, archive, permanent delete, reorder, project assignment, priority, date, description, and session estimate.
 - Focus shows one task, remaining time, a scratchpad, essential controls, completion, and breaks.
 - Quick Capture opens from a global shortcut and saves to the inbox with immediate keyboard focus.
 - The shortcut is shown in familiar Windows notation while its portable Electron accelerator remains valid internally.
@@ -19,6 +19,7 @@ The primary user is an individual Windows user managing personal work such as jo
 - Settings controls timer durations, break behavior, notifications, theme, reduced motion, startup behavior, backup, import, export, and deletion.
 - Closing the main window keeps Rurinagi available in the system tray, whose menu can restore the app, open Quick Capture, or quit.
 - The app uses the product website's green visual identity and keeps project metadata clearly spaced.
+- Task creation and focus initiation have distinct visual hierarchy, and dropdown controls match the application theme.
 
 ## Acceptance criteria
 
@@ -30,6 +31,7 @@ The primary user is an individual Windows user managing personal work such as jo
 - Reduced-motion mode removes nonessential movement.
 - Local exports can be restored after validation.
 - The system tray can restore a hidden main window and offers an explicit Quit command.
+- Permanent task deletion requires confirmation, keeps historical session records, and is unavailable while that task has a live focus timer.
 
 ## Out of scope
 

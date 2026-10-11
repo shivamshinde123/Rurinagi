@@ -35,7 +35,7 @@ Greeting and supportive prompt
 
 ## Tasks
 
-Grouped task list occupies the main area. Selecting a task opens a right-side inspector from the same edge in both directions. Empty groups use concise, actionable text.
+Grouped task list occupies the main area. Selecting a task opens a right-side inspector from the same edge in both directions. Empty groups use concise, actionable text. The inspector separates non-destructive Archive from confirmed permanent Delete; Delete preserves focus-history records and is disabled for a live timer.
 
 ## Focus
 
@@ -52,6 +52,8 @@ A compact summary precedes a chronological, keyboard-readable session list. Stat
 ## Settings
 
 Settings use labeled rows grouped under Timer, Appearance, Behavior, Data and privacy, and About. Destructive data clearing sits last and requires confirmation.
+
+Dropdowns use the same rounded surfaces, green focus treatment, spacing, and chevrons as the rest of the app instead of the browser's default closed-control styling. Task creation is a soft-green action; Start focus remains the emphasized filled action.
 
 ## Motion and accessibility
 
