@@ -1,0 +1,15 @@
+node_modules/
+.vite/
+dist/
+out/
+coverage/
+output/
+.playwright-cli/
+*.log
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.env
+.env.*
+!.env.example
+
