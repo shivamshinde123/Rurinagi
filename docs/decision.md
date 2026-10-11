@@ -38,3 +38,7 @@ Archive remains a non-destructive organizational state, while Delete permanently
 
 Native select popups cannot be consistently themed on Windows, so V2 uses one reusable in-app listbox control with keyboard navigation, selection state, focus handling, outside-click dismissal, and app-native surfaces. Destructive confirmations use reusable Rurinagi dialogs instead of operating-system browser prompts.
 
+## 2026-10-11 Require a name before task creation
+
+Add task opens an in-app dialog with a focused Task name field. Create task stays disabled for blank input, and cancellation creates no data. After submission, the named task is selected in the existing inspector for optional details; the app no longer inserts a `New task` placeholder that the user must rename.
+

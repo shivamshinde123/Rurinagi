@@ -27,9 +27,12 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     }
 
     await page.getByRole('button', { name: 'Tasks', exact: true }).click();
-    await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).click();
-    await page.getByLabel('Task title').fill('Release verification task');
     assert.equal(await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).evaluate((button) => button.classList.contains('create-action')), true);
+    await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).click();
+    assert.equal(await page.getByRole('dialog').getByRole('button', { name: 'Create task' }).isDisabled(), true);
+    await page.getByLabel('Task name').fill('Release verification task');
+    await page.getByRole('dialog').getByRole('button', { name: 'Create task' }).click();
+    await page.getByText('Task created', { exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: 'Start focus' }).evaluate((button) => button.classList.contains('focus-action')), true);
     assert.equal(await page.locator('.primary-task-actions').getByRole('button', { name: 'Add task', exact: true }).count(), 1);
     await page.getByLabel('Notes').fill('Exercise the complete daily loop');
@@ -57,7 +60,8 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     assert.equal(await page.locator('select').count(), 0);
 
     await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).click();
-    await page.getByLabel('Task title').fill('Delete verification task');
+    await page.getByLabel('Task name').fill('Delete verification task');
+    await page.getByRole('dialog').getByRole('button', { name: 'Create task' }).click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
     await page.getByRole('dialog').press('Escape');
     assert.equal(await page.getByRole('dialog').count(), 0);

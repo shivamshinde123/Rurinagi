@@ -133,14 +133,20 @@ function TimerCard({ state, next, onStart, onFocus }: { state: AppState; next?: 
 function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; navigate: (screen: Screen) => void }) {
   const [selectedId, setSelectedId] = useState<string | null>(state.tasks.find((task) => task.status !== 'archived')?.id ?? null);
   const [query, setQuery] = useState('');
+  const [creatingTask, setCreatingTask] = useState(false);
+  const [taskName, setTaskName] = useState('');
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [confirmation, setConfirmation] = useState<'archive' | 'delete' | null>(null);
   const selected = state.tasks.find((task) => task.id === selectedId);
   const visible = state.tasks.filter((task) => task.status !== 'archived' && task.title.toLowerCase().includes(query.toLowerCase()));
-  const add = () => {
-    const task: Task = { id: crypto.randomUUID(), title: 'New task', description: '', projectId: null, priority: 'normal', dueDate: localDate(), estimateSessions: 1, status: 'inbox', sortOrder: state.tasks.length, isToday: false, createdAt: new Date().toISOString(), completedAt: null };
-    commit({ ...state, tasks: [...state.tasks, task] }); setSelectedId(task.id);
+  const addTask = (event: FormEvent) => {
+    event.preventDefault();
+    const title = taskName.trim();
+    if (!title) return;
+    const task: Task = { id: crypto.randomUUID(), title: title.slice(0, 500), description: '', projectId: null, priority: 'normal', dueDate: localDate(), estimateSessions: 1, status: 'inbox', sortOrder: state.tasks.length, isToday: false, createdAt: new Date().toISOString(), completedAt: null };
+    commit({ ...state, tasks: [...state.tasks, task] }, 'Task created');
+    setSelectedId(task.id); setTaskName(''); setCreatingTask(false);
   };
   const addProject = (event: FormEvent) => {
     event.preventDefault();
@@ -160,7 +166,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
   };
   const groups = [['Today', visible.filter((task) => task.isToday)], ['Tomorrow', visible.filter((task) => task.dueDate && task.dueDate > localDate() && !task.isToday)], ['Later', visible.filter((task) => !task.isToday && (!task.dueDate || task.dueDate <= localDate()))]] as const;
   return <>
-    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button create-action" onClick={add}><Icon name="plus" />Add task</button></div>} />
+    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button create-action" onClick={() => setCreatingTask(true)}><Icon name="plus" />Add task</button></div>} />
     <div className="tasks-layout">
       <section className="task-browser card">
         <label className="search-field"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks" aria-label="Search tasks" /></label>
@@ -177,7 +183,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
           <div className="field-grid"><Field label="Priority"><SelectControl ariaLabel="Priority" value={selected.priority} onChange={(value) => update({ priority: value as Priority })} options={[{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }]} /></Field><Field label="Status"><SelectControl ariaLabel="Status" value={selected.status} onChange={(value) => update({ status: value as TaskStatus })} options={[{ value: 'inbox', label: 'Inbox' }, { value: 'planned', label: 'Planned' }, { value: 'waiting', label: 'Waiting' }, { value: 'complete', label: 'Complete' }]} /></Field></div>
           <label className="switch-row"><input type="checkbox" checked={selected.isToday} onChange={(event) => update({ isToday: event.target.checked, status: event.target.checked ? 'planned' : selected.status })} /><span>Priority for today</span></label>
           <div className="reorder-actions"><button className="button quiet" onClick={() => move(-1)}>Move up</button><button className="button quiet" onClick={() => move(1)}>Move down</button></div>
-          <div className="primary-task-actions"><button className="button primary focus-action" onClick={() => { commit(startFocus(state, selected.id)); navigate('focus'); }}><Icon name="play" />Start focus</button><button className="button create-action" onClick={add}><Icon name="plus" />Add task</button></div>
+          <div className="primary-task-actions"><button className="button primary focus-action" onClick={() => { commit(startFocus(state, selected.id)); navigate('focus'); }}><Icon name="play" />Start focus</button><button className="button create-action" onClick={() => setCreatingTask(true)}><Icon name="plus" />Add task</button></div>
           <div className="inspector-actions">
             <button className="button quiet" onClick={() => setConfirmation('archive')}>Archive</button>
             <button className="button destructive destructive-outline" disabled={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status)} title={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status) ? 'End the active focus session before deleting this task' : 'Permanently delete task'} onClick={() => setConfirmation('delete')}>Delete</button>
@@ -185,6 +191,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
         </> : <Empty title="Select a task" body="Details and actions will appear here." />}
       </aside>
     </div>
+    {creatingTask && <Modal title="Add a task" onClose={() => { setCreatingTask(false); setTaskName(''); }}><form onSubmit={addTask}><Field label="Task name"><input autoFocus value={taskName} maxLength={500} placeholder="What needs your attention?" onChange={(event) => setTaskName(event.target.value)} /></Field><div className="modal-actions"><button className="button primary" type="submit" disabled={!taskName.trim()}>Create task</button><button className="button quiet" type="button" onClick={() => { setCreatingTask(false); setTaskName(''); }}>Cancel</button></div></form></Modal>}
     {creatingProject && <Modal title="New project" onClose={() => setCreatingProject(false)}><form onSubmit={addProject}><Field label="Project name"><input autoFocus value={projectName} maxLength={120} onChange={(event) => setProjectName(event.target.value)} /></Field><div className="modal-actions"><button className="button primary" type="submit" disabled={!projectName.trim()}>Create project</button><button className="button quiet" type="button" onClick={() => setCreatingProject(false)}>Cancel</button></div></form></Modal>}
     {confirmation === 'archive' && selected && <ConfirmModal title="Archive this task?" body="It will leave your active lists, while its focus history stays available." confirmLabel="Archive task" onClose={() => setConfirmation(null)} onConfirm={() => { commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, status: 'archived' } : task) }, 'Task archived'); setSelectedId(null); setConfirmation(null); }} />}
     {confirmation === 'delete' && selected && <ConfirmModal title="Delete this task permanently?" body={`“${selected.title}” will be removed. Focus history will be kept. This cannot be undone.`} confirmLabel="Delete task" destructive onClose={() => setConfirmation(null)} onConfirm={() => { commit({ ...state, tasks: state.tasks.filter((task) => task.id !== selected.id) }, 'Task deleted'); setSelectedId(null); setConfirmation(null); }} />}

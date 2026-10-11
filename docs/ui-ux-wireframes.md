@@ -35,7 +35,7 @@ Greeting and supportive prompt
 
 ## Tasks
 
-Grouped task list occupies the main area. Selecting a task opens a right-side inspector from the same edge in both directions. Empty groups use concise, actionable text. The inspector separates non-destructive Archive from confirmed permanent Delete; Delete preserves focus-history records and is disabled for a live timer.
+Grouped task list occupies the main area. Add task opens a focused naming dialog with Create task and Cancel actions; no placeholder task is inserted. Selecting a created task opens a right-side inspector from the same edge in both directions. Empty groups use concise, actionable text. The inspector separates non-destructive Archive from confirmed permanent Delete; Delete preserves focus-history records and is disabled for a live timer.
 
 ## Focus
 
