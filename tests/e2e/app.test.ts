@@ -81,6 +81,7 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
     await page.getByRole('button', { name: 'Update task', exact: true }).click();
     await page.getByText('Task updated', { exact: true }).waitFor();
     assert.equal(await page.locator('.inspector').count(), 0);
+    assert.equal(await page.getByText('Release verification task', { exact: true }).first().locator('..').getByText('High priority', { exact: true }).count(), 1);
 
     await page.locator('.page-header').getByRole('button', { name: 'Add task', exact: true }).click();
     await page.getByLabel('Task name').fill('Delete verification task');
@@ -113,6 +114,7 @@ test('packaged Electron app completes every V3 workflow', { timeout: 180_000 }, 
 
     await page.getByRole('button', { name: 'Today', exact: true }).click();
     await page.getByText('Captured release task', { exact: true }).waitFor();
+    assert.equal(await page.getByText('Captured release task', { exact: true }).first().locator('..').getByText('Normal priority', { exact: true }).count(), 1);
     const projectLabel = page.locator('.project-label').first();
     const [dotBox, nameBox] = await Promise.all([projectLabel.locator('.project-dot').boundingBox(), projectLabel.locator('span').last().boundingBox()]);
     assert.ok(dotBox && nameBox && nameBox.x - (dotBox.x + dotBox.width) >= 4, 'project dot has readable spacing from its name');

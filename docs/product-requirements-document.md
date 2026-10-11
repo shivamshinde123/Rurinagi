@@ -13,7 +13,7 @@ The primary user is an individual Windows user managing personal work such as jo
 ## Required experiences
 
 - Today shows up to three priorities, overdue work, the active task, timer state, and a compact daily summary.
-- Tasks supports named creation, edit, complete, reopen, archive, permanent delete, reorder, project assignment, project creation and deletion, priority, date, description, and session estimate.
+- Tasks supports named creation, edit, complete, reopen, archive, permanent delete, reorder, project assignment, project creation and deletion, visible priority, date, description, and session estimate.
 - Focus shows one task, remaining time, a scratchpad, essential controls, completion, and breaks.
 - Quick Capture opens from a global shortcut and saves to the inbox with immediate keyboard focus.
 - The shortcut is shown in familiar Windows notation while its portable Electron accelerator remains valid internally.
@@ -42,6 +42,7 @@ The primary user is an individual Windows user managing personal work such as jo
 - Archive, task deletion, session deletion, and clearing all data use consistent in-app confirmation dialogs.
 - Add task opens a focused name field and creates nothing until a non-empty name is submitted.
 - The task inspector is absent until a task is selected or created; Update task saves the draft and closes it.
+- Every task row in Today and Tasks shows its Low, Normal, or High priority with visible text rather than color alone.
 - Planned dates use the app-rendered calendar in Task Details and Quick Capture, with month navigation, Today, Clear, keyboard navigation, and local `YYYY-MM-DD` storage.
 - Insights are calculated from existing local session history, render seven accessible day values, and require no account, upload, or new persistence fields.
 - Finishing first-run setup persists both choices, reaches Today immediately, and does not reappear on ordinary restarts.

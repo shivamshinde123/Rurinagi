@@ -16,6 +16,8 @@ const screens: { id: Screen; label: string; icon: IconName }[] = [
   { id: 'settings', label: 'Settings', icon: 'settings' },
 ];
 
+const priorityLabels: Record<Priority, string> = { low: 'Low priority', normal: 'Normal priority', high: 'High priority' };
+
 export function App() {
   const [state, setState] = useState<AppState | null>(null);
   const [screen, setScreen] = useState<Screen>('today');
@@ -401,7 +403,7 @@ function QuickCapture({ state, commit }: { state: AppState; commit: Commit }) {
 
 function TaskRow({ task, state, selected, onToggle, onOpen }: { task: Task; state: AppState; selected?: boolean; onToggle: () => void; onOpen?: () => void }) {
   const project = projectFor(state, task.projectId); const complete = task.status === 'complete'; const overdue = task.dueDate ? task.dueDate < localDate() && !complete : false;
-  return <div className={`task-row ${selected ? 'selected' : ''} ${complete ? 'done' : ''}`}><button className="checkbox" aria-label={complete ? `Reopen ${task.title}` : `Complete ${task.title}`} aria-pressed={complete} onClick={onToggle}>{complete && <Icon name="check" />}</button><button className="task-content" onClick={onOpen}><span>{task.title}</span><small>{project && <span className="project-label"><ProjectDot project={project} /><span>{project.name}</span></span>}{task.estimateSessions > 0 && ` · ${task.estimateSessions * state.settings.focusMinutes} min`}{overdue && <b className="overdue"> · Overdue</b>}</small></button></div>;
+  return <div className={`task-row ${selected ? 'selected' : ''} ${complete ? 'done' : ''}`}><button className="checkbox" aria-label={complete ? `Reopen ${task.title}` : `Complete ${task.title}`} aria-pressed={complete} onClick={onToggle}>{complete && <Icon name="check" />}</button><button className="task-content" onClick={onOpen}><span>{task.title}</span><small>{project && <span className="project-label"><ProjectDot project={project} /><span>{project.name}</span></span>}<span className={`priority-label ${task.priority}`}>{priorityLabels[task.priority]}</span>{task.estimateSessions > 0 && <span>{task.estimateSessions * state.settings.focusMinutes} min</span>}{overdue && <b className="overdue">Overdue</b>}</small></button></div>;
 }
 
 function SessionRow({ session, state, selected, onClick }: { session: Session; state: AppState; selected: boolean; onClick: () => void }) {

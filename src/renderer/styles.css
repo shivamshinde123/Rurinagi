@@ -126,8 +126,11 @@ h1, h2, h3 { text-wrap: balance; }
 .checkbox .icon { width: .95rem; }
 .task-content { display: grid; gap: .2rem; min-width: 0; padding: .45rem .25rem; border: 0; background: transparent; text-align: left; }
 .task-content > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 590; }
-.task-content small { display: flex; align-items: center; color: var(--text-secondary); font-size: .75rem; }
+.task-content small { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .5rem; color: var(--text-secondary); font-size: .75rem; }
 .project-label { display: inline-flex; align-items: center; gap: .38rem; }
+.priority-label { padding: .08rem .42rem; border-radius: 999px; background: var(--surface-soft); color: var(--text-secondary); font-size: .67rem; font-weight: 700; line-height: 1.35; }
+.priority-label.normal { background: var(--accent-soft); color: var(--accent-strong); }
+.priority-label.high { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
 .overdue { color: var(--danger); font-weight: 650; }
 .row-more { opacity: 0; }
 .task-row:hover .row-more, .row-more:focus-visible { opacity: 1; }
