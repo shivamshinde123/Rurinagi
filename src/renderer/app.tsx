@@ -159,7 +159,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
   };
   const groups = [['Today', visible.filter((task) => task.isToday)], ['Tomorrow', visible.filter((task) => task.dueDate && task.dueDate > localDate() && !task.isToday)], ['Later', visible.filter((task) => !task.isToday && (!task.dueDate || task.dueDate <= localDate()))]] as const;
   return <>
-    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button primary" onClick={add}><Icon name="plus" />New task</button></div>} />
+    <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button create-action" onClick={add}><Icon name="plus" />New task</button></div>} />
     <div className="tasks-layout">
       <section className="task-browser card">
         <label className="search-field"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks" aria-label="Search tasks" /></label>
@@ -176,8 +176,11 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
           <div className="field-grid"><Field label="Priority"><select value={selected.priority} onChange={(event) => update({ priority: event.target.value as Priority })}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></Field><Field label="Status"><select value={selected.status} onChange={(event) => update({ status: event.target.value as TaskStatus })}><option value="inbox">Inbox</option><option value="planned">Planned</option><option value="waiting">Waiting</option><option value="complete">Complete</option></select></Field></div>
           <label className="switch-row"><input type="checkbox" checked={selected.isToday} onChange={(event) => update({ isToday: event.target.checked, status: event.target.checked ? 'planned' : selected.status })} /><span>Priority for today</span></label>
           <div className="reorder-actions"><button className="button quiet" onClick={() => move(-1)}>Move up</button><button className="button quiet" onClick={() => move(1)}>Move down</button></div>
-          <button className="button primary wide" onClick={() => { commit(startFocus(state, selected.id)); navigate('focus'); }}><Icon name="play" />Start focus</button>
-          <button className="button destructive quiet wide inspector-delete" onClick={() => { if (confirm('Archive this task?')) { commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, status: 'archived' } : task) }, 'Task archived'); setSelectedId(null); } }}>Archive task</button>
+          <button className="button primary focus-action wide" onClick={() => { commit(startFocus(state, selected.id)); navigate('focus'); }}><Icon name="play" />Start focus</button>
+          <div className="inspector-actions">
+            <button className="button quiet" onClick={() => { if (confirm('Archive this task? You can keep its focus history.')) { commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, status: 'archived' } : task) }, 'Task archived'); setSelectedId(null); } }}>Archive</button>
+            <button className="button destructive destructive-outline" disabled={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status)} title={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status) ? 'End the active focus session before deleting this task' : 'Permanently delete task'} onClick={() => { if (confirm(`Permanently delete “${selected.title}”? Focus history will be kept. This cannot be undone.`)) { commit({ ...state, tasks: state.tasks.filter((task) => task.id !== selected.id) }, 'Task deleted'); setSelectedId(null); } }}>Delete</button>
+          </div>
         </> : <Empty title="Select a task" body="Details and actions will appear here." />}
       </aside>
     </div>

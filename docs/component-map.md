@@ -20,7 +20,7 @@ V2 keeps the connected screen components together in `src/renderer/app.tsx` beca
 - `App`: loads state, coordinates persistence, navigation, theme, and window mode.
 - `Sidebar`: primary navigation and quick capture entry point.
 - `Today`: priority selection, next task, daily tasks, summary, and quick note.
-- `Tasks`: task creation, grouping, completion, ordering, and inspector editing.
+- `Tasks`: task creation, grouping, completion, ordering, inspector editing, reversible archive, and confirmed permanent deletion that preserves session history.
 - `Focus`: focus and break state machine controls, progress, and scratchpad.
 - `History`: filtered chronological records, notes, and task reassociation.
 - `SettingsScreen`: timer, appearance, behavior, and local-data controls.
