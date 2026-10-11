@@ -1,8 +1,8 @@
 # Data extraction specification
 
-## V2 inputs
+## V3 inputs
 
-Rurinagi does not ingest third-party data in V2. User-entered tasks, projects, notes, settings, and timer events are accepted through local UI controls.
+Rurinagi does not ingest third-party data in V3. User-entered tasks, projects, notes, settings, and timer events are accepted through local UI controls. Insights aggregate those existing focus-session records locally.
 
 ## Processing rules
 

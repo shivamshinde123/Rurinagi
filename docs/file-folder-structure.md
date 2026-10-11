@@ -7,7 +7,7 @@ Rurinagi/
     main/                  Privileged Electron process and storage
     preload/               Narrow renderer bridge
     renderer/
-      app.tsx               State coordinator, V2 screens, and small shared components
+      app.tsx               State coordinator, V3 screens, Insights, and shared components
       styles.css            Tokens, layout, states, and accessibility
       main.tsx              React entry point
     shared/

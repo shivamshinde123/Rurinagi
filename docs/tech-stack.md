@@ -5,7 +5,7 @@
 | Layer | Technology | Rationale |
 | --- | --- | --- |
 | Desktop runtime | Electron | Direct Windows windows, global shortcuts, notifications, packaging, and Node integration in the privileged process. |
-| UI | React with TypeScript | Predictable state-driven screens and accessible reusable components. |
+| UI | React with TypeScript | Predictable state-driven screens and accessible reusable components, including a dependency-free CSS Focus Skyline. |
 | Build | Vite and Electron Forge | Fast renderer development and repeatable Windows packaging. Forge's Vite integration is currently experimental, so versions are locked and builds are verified in CI. |
 | Persistence | Electron bundled `node:sqlite` | Durable local transactions without a native npm database dependency. |
 | Styling | Plain CSS design tokens | Small dependency surface and direct control of motion, themes, contrast, and platform media queries. |
@@ -19,5 +19,5 @@
 
 ## Future decisions
 
-Code signing, auto-update distribution, detailed analytics libraries, integration providers, and AI runtime remain TBD.
+Code signing, auto-update distribution, integration providers, and AI runtime remain TBD. A chart library is intentionally unnecessary for the current seven-day visualization.
 

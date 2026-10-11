@@ -1,4 +1,4 @@
-export type Screen = 'today' | 'tasks' | 'focus' | 'history' | 'settings';
+export type Screen = 'today' | 'tasks' | 'focus' | 'history' | 'insights' | 'settings';
 export type Theme = 'light' | 'dark' | 'system';
 export type TaskStatus = 'inbox' | 'planned' | 'active' | 'waiting' | 'complete' | 'archived';
 export type Priority = 'low' | 'normal' | 'high';
@@ -71,6 +71,20 @@ export interface AppState {
   settings: Settings;
   quickNote: string;
   sessionNote: string;
+}
+
+export interface FocusDay { date: string; label: string; seconds: number; sessions: number }
+export interface ProjectFocus { projectId: string | null; seconds: number; sessions: number }
+export interface FocusInsights {
+  days: FocusDay[];
+  weekSeconds: number;
+  previousWeekSeconds: number;
+  weekChangePercent: number | null;
+  sessions: number;
+  completionRate: number;
+  currentStreak: number;
+  longestStreak: number;
+  projects: ProjectFocus[];
 }
 
 export const defaultSettings: Settings = {
@@ -224,4 +238,43 @@ export function formatDuration(totalSeconds: number): string {
 export function focusedSecondsToday(state: AppState, now = new Date()): number {
   const today = localDate(now);
   return state.sessions.filter((session) => localDate(new Date(session.endedAt)) === today).reduce((total, session) => total + session.actualSeconds, 0);
+}
+
+export function buildFocusInsights(state: AppState, now = new Date()): FocusInsights {
+  const dayAt = (offset: number): Date => new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 12);
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = dayAt(index - 6);
+    const value = localDate(date);
+    const sessions = state.sessions.filter((session) => localDate(new Date(session.endedAt)) === value);
+    return { date: value, label: date.toLocaleDateString(undefined, { weekday: 'short' }), seconds: sessions.reduce((sum, session) => sum + session.actualSeconds, 0), sessions: sessions.length };
+  });
+  const weekDates = new Set(days.map((day) => day.date));
+  const previousDates = new Set(Array.from({ length: 7 }, (_, index) => localDate(dayAt(index - 13))));
+  const recentSessions = state.sessions.filter((session) => weekDates.has(localDate(new Date(session.endedAt))));
+  const weekSeconds = days.reduce((sum, day) => sum + day.seconds, 0);
+  const previousWeekSeconds = state.sessions.filter((session) => previousDates.has(localDate(new Date(session.endedAt)))).reduce((sum, session) => sum + session.actualSeconds, 0);
+  const projectMap = new Map<string | null, ProjectFocus>();
+  for (const session of recentSessions) {
+    const current = projectMap.get(session.projectId) ?? { projectId: session.projectId, seconds: 0, sessions: 0 };
+    current.seconds += session.actualSeconds; current.sessions += 1; projectMap.set(session.projectId, current);
+  }
+  const focusedDates = new Set(state.sessions.map((session) => localDate(new Date(session.endedAt))));
+  let cursor = dayAt(0);
+  if (!focusedDates.has(localDate(cursor))) cursor = dayAt(-1);
+  let currentStreak = 0;
+  while (focusedDates.has(localDate(cursor))) { currentStreak += 1; cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - 1, 12); }
+  let longestStreak = 0; let runningStreak = 0; let previous = '';
+  for (const date of [...focusedDates].sort()) {
+    const expected = previous ? localDate(new Date(Number(previous.slice(0, 4)), Number(previous.slice(5, 7)) - 1, Number(previous.slice(8, 10)) + 1, 12)) : '';
+    runningStreak = date === expected ? runningStreak + 1 : 1;
+    longestStreak = Math.max(longestStreak, runningStreak); previous = date;
+  }
+  return {
+    days, weekSeconds, previousWeekSeconds,
+    weekChangePercent: previousWeekSeconds ? Math.round(((weekSeconds - previousWeekSeconds) / previousWeekSeconds) * 100) : null,
+    sessions: recentSessions.length,
+    completionRate: recentSessions.length ? Math.round((recentSessions.filter((session) => session.outcome === 'completed').length / recentSessions.length) * 100) : 0,
+    currentStreak, longestStreak,
+    projects: [...projectMap.values()].sort((a, b) => b.seconds - a.seconds),
+  };
 }

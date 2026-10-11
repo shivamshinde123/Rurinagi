@@ -1,6 +1,6 @@
 # Environment and configuration reference
 
-Rurinagi V2 requires no secrets and no runtime network configuration.
+Rurinagi V3 requires no secrets and no runtime network configuration. Insights use only the locally stored session history.
 
 | Setting | Default | Purpose |
 | --- | --- | --- |

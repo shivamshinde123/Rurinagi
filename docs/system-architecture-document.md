@@ -21,10 +21,11 @@ The public GitHub Pages site is a separate static delivery surface. Publishing a
 - Main: validates IPC, owns storage and desktop capabilities.
 - Tray: remains process-owned and routes only to existing main-process window actions.
 - Persistence: one per-user SQLite file plus user-selected JSON exports and backups.
+- Insights: a pure in-process read model derived from persisted sessions; it adds no storage, IPC, or network boundary.
 
 ## Security and privacy
 
-The app loads only packaged local content, applies a restrictive Content Security Policy, enables context isolation and renderer sandboxing, validates imported data, and never records keystrokes, screenshots, or continuous application activity.
+The app loads only packaged local content, applies a restrictive Content Security Policy, enables context isolation and renderer sandboxing, validates imported data, and never records keystrokes, screenshots, or continuous application activity. Focus insights stay on-device and are calculated only from explicit session records.
 
 ## Availability
 

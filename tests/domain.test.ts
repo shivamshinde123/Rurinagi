@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  createEmptyState, discardTimer, finishTimer, focusedSecondsToday, formatDuration,
+  buildFocusInsights, createEmptyState, discardTimer, finishTimer, focusedSecondsToday, formatDuration,
   pauseTimer, recoverState, remainingSeconds, resumeTimer, startBreak, startFocus,
 } from '../src/shared/domain';
 
@@ -108,4 +108,42 @@ test('today summary includes every session ending on the local day', () => {
     { id: 'yesterday-1', taskId: 'task-1', projectId: null, plannedSeconds: 1500, actualSeconds: 600, startedAt: new Date(2026, 9, 10, 9).toISOString(), endedAt: new Date(2026, 9, 10, 9, 10).toISOString(), outcome: 'completed', note: '' },
   ];
   assert.equal(focusedSecondsToday(state, now), 300);
+});
+
+test('focus insights calculate weekly trends, projects, completion, and streaks', () => {
+  const state = stateWithTask();
+  const now = new Date(2026, 9, 11, 12);
+  state.projects.push({ id: 'project-1', name: 'Rurinagi', color: '#315F4D' });
+  const session = (id: string, offset: number, seconds: number, outcome: 'completed' | 'partial', projectId: string | null = 'project-1') => {
+    const endedAt = new Date(2026, 9, 11 + offset, 10);
+    return { id, taskId: 'task-1', projectId, plannedSeconds: 1500, actualSeconds: seconds, startedAt: new Date(endedAt.getTime() - seconds * 1000).toISOString(), endedAt: endedAt.toISOString(), outcome, note: '' } as const;
+  };
+  state.sessions = [
+    session('today', 0, 1200, 'completed'),
+    session('yesterday', -1, 600, 'partial'),
+    session('two-days', -2, 300, 'completed', null),
+    session('previous-week', -7, 700, 'completed'),
+    session('older-streak-a', -10, 200, 'completed'),
+    session('older-streak-b', -11, 200, 'completed'),
+    session('older-streak-c', -12, 200, 'completed'),
+    session('older-streak-d', -13, 200, 'completed'),
+  ];
+
+  const insights = buildFocusInsights(state, now);
+  assert.equal(insights.weekSeconds, 2100);
+  assert.equal(insights.previousWeekSeconds, 1500);
+  assert.equal(insights.weekChangePercent, 40);
+  assert.equal(insights.sessions, 3);
+  assert.equal(insights.completionRate, 67);
+  assert.equal(insights.currentStreak, 3);
+  assert.equal(insights.longestStreak, 4);
+  assert.deepEqual(insights.projects.map((project) => [project.projectId, project.seconds]), [['project-1', 1800], [null, 300]]);
+  assert.equal(insights.days.at(-1)?.date, '2026-10-11');
+});
+
+test('focus insights keep a streak alive until the current day ends', () => {
+  const state = stateWithTask();
+  const now = new Date(2026, 9, 11, 12);
+  state.sessions = [{ id: 'yesterday', taskId: 'task-1', projectId: null, plannedSeconds: 1500, actualSeconds: 300, startedAt: new Date(2026, 9, 10, 9).toISOString(), endedAt: new Date(2026, 9, 10, 9, 5).toISOString(), outcome: 'completed', note: '' }];
+  assert.equal(buildFocusInsights(state, now).currentStreak, 1);
 });

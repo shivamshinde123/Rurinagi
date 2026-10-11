@@ -27,6 +27,13 @@
 
 The global shortcut opens a small dedicated renderer window. Saving appends an inbox task, persists state, notifies the main window, and hides the capture window.
 
+## Insights
+
+1. The Insights screen passes current `AppState` to `buildFocusInsights` when session history changes.
+2. The pure domain function groups sessions into the current and previous rolling seven-day windows, projects, outcomes, and focused calendar dates.
+3. React renders summary metrics, the seven-column Focus Skyline, project shares, and current/longest streaks.
+4. No derived insight value is persisted or sent outside the renderer.
+
 ## Tray lifecycle
 
 The main process creates one tray instance after the main window is created. Closing the main window prevents destruction and hides it. Show Rurinagi restores and focuses that window; Quick capture reuses the existing capture-window path; Quit marks the process as quitting before normal window, shortcut, tray, and database cleanup.

@@ -50,3 +50,7 @@ The Tasks screen does not reserve empty inspector space. Selecting or creating a
 
 Windows renders `input[type="date"]` with operating-system chrome that conflicts with Rurinagi's visual language and cannot be styled reliably. Task Details and Quick Capture now share one dependency-free calendar control using the existing green palette, solid floating surfaces, explicit Today and Clear actions, and desktop keyboard navigation. Stored values remain local `YYYY-MM-DD` strings, so no data migration or persistence change is required.
 
+## 2026-10-11 Derive V3 insights from local session history
+
+V3 adds one pure `buildFocusInsights` function and one Insights screen. A rolling seven-day Focus Skyline, previous-period comparison, project distribution, completion rate, and streaks are calculated when session history changes. This keeps the schema at version 1, avoids a chart dependency and migration, and preserves the product's offline privacy boundary. Relational normalization remains unnecessary at the current data volume.
+

@@ -1,6 +1,6 @@
 # Component map
 
-## V2 desktop shell
+## V3 desktop shell
 
 - Main window: hosts the full planning and focus experience; close hides it to the tray.
 - Quick Capture window: captures a task without restoring the full application.
@@ -15,7 +15,7 @@
 
 ## Renderer
 
-V2 keeps the connected screen components together in `src/renderer/app.tsx` because they share one small state boundary. Split them only when independent ownership or reuse appears.
+V3 keeps the connected screen components together in `src/renderer/app.tsx` because they share one small state boundary. Split them only when independent ownership or reuse appears.
 
 - `App`: loads state, coordinates persistence, navigation, theme, and window mode.
 - `Sidebar`: primary navigation and quick capture entry point.
@@ -23,10 +23,16 @@ V2 keeps the connected screen components together in `src/renderer/app.tsx` beca
 - `Tasks`: validated named-task creation, grouping, completion, ordering, contextual draft-backed inspector editing, non-destructive archive, and confirmed permanent deletion that preserves session history.
 - `Focus`: focus and break state machine controls, progress, and scratchpad.
 - `History`: filtered chronological records, notes, and task reassociation.
+- `Insights`: seven-day focus summary, weekly comparison, project distribution, and current/longest streaks.
+- `FocusSkyline`: dependency-free, accessible seven-column visualization derived from `FocusDay` values.
 - `SettingsScreen`: timer, appearance, behavior, and local-data controls.
 - `QuickCapture`: focused, progressive task capture window.
 - `ProgressRing`, `TaskRow`, `SessionRow`, and `Icon`: small shared presentation components in the same module.
 - `SelectControl`: reusable themed listbox used by task editing, Quick Capture, History filters, session reassignment, and Settings.
 - `CalendarControl`: reusable themed planned-date picker used by task editing and Quick Capture while preserving local `YYYY-MM-DD` values.
 - `ConfirmModal`: reusable in-app confirmation surface for archive and destructive actions.
+
+## Shared domain
+
+- `buildFocusInsights`: pure aggregation boundary for all V3 insight values; it reads sessions but does not mutate or persist state.
 
