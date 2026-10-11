@@ -4,12 +4,12 @@ Rurinagi is a private, offline-first Windows desktop app for choosing one meanin
 
 ## Install on Windows
 
-1. Download `Rurinagi-3.0.0-Setup.exe` from the GitHub Release or project website.
+1. Download `Rurinagi-3.0.1-Setup.exe` from the GitHub Release or project website.
 2. Double-click the installer.
 3. This release is not code-signed. If Windows SmartScreen appears, choose **More info**, verify the app name is Rurinagi, then choose **Run anyway** only if you trust this project.
 4. Complete Rurinagi's two-step first-run setup.
 
-Windows may show the publisher as **Unknown publisher**. Verify the download's SHA-256 value against [`docs/release-checksums-v3.0.0.txt`](docs/release-checksums-v3.0.0.txt) before running it.
+Windows may show the publisher as **Unknown publisher**. Verify the download's SHA-256 value against [`docs/release-checksums-v3.0.1.txt`](docs/release-checksums-v3.0.1.txt) before running it.
 
 ## Development
 

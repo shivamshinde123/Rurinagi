@@ -4,7 +4,8 @@ import started from 'electron-squirrel-startup';
 import { AppState, isAllowedPolicyUrl } from '../shared/domain';
 import { backupDatabase, clearState, closeStorage, exportState, importState, loadState, openStorage, saveState } from './storage';
 
-if (started) app.quit();
+const shouldStart = !started && app.requestSingleInstanceLock();
+if (!shouldStart) app.quit();
 
 const databasePath = path.join(app.getPath('userData'), 'rurinagi.sqlite');
 let mainWindow: BrowserWindow | null = null;
@@ -157,17 +158,20 @@ function registerIpc(): void {
   });
 }
 
-app.whenReady().then(() => {
-  app.setAppUserModelId('com.rurinagi.app');
-  openStorage(databasePath);
-  registerIpc();
-  createMainWindow();
-  createTray();
-  applySystemSettings(loadState());
-  app.on('activate', showMainWindow);
-});
+if (shouldStart) {
+  app.setAppUserModelId('com.squirrel.rurinagi.rurinagi');
+  app.on('second-instance', () => { void app.whenReady().then(showMainWindow); });
+  app.whenReady().then(() => {
+    openStorage(databasePath);
+    registerIpc();
+    createMainWindow();
+    createTray();
+    applySystemSettings(loadState());
+    app.on('activate', showMainWindow);
+  });
 
-app.on('before-quit', () => { isQuitting = true; });
-app.on('will-quit', () => { tray?.destroy(); tray = null; globalShortcut.unregisterAll(); closeStorage(); });
-app.on('window-all-closed', () => app.quit());
+  app.on('before-quit', () => { isQuitting = true; });
+  app.on('will-quit', () => { tray?.destroy(); tray = null; globalShortcut.unregisterAll(); closeStorage(); });
+  app.on('window-all-closed', () => app.quit());
+}
 

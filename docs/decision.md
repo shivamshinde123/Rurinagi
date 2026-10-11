@@ -72,3 +72,9 @@ V3 is published without Windows code signing because its present audience is the
 
 This is an accepted distribution risk, not a claim that the installer has a verified publisher identity. Code signing remains deferred until the app is distributed broadly or commercially.
 
+## 2026-10-11 Align Windows identity and make relaunch single-instance
+
+V3.0.1 uses Squirrel's generated `com.squirrel.rurinagi.rurinagi` AppUserModelID so the running app and installed shortcuts share one Windows identity. Rurinagi also owns a single-instance lock: launching it while the tray process is active restores and focuses the existing window instead of starting a duplicate process tree.
+
+Release verification now launches the hardened packaged `Rurinagi.exe` directly, hides it through the Windows close-window message, launches it again, and verifies that the original window returns. This closes the gap left by the earlier development-runtime-only restart test.
+

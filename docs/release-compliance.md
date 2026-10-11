@@ -19,7 +19,7 @@ Reviewed October 11, 2026 for the local-only Windows desktop application and sta
 | Email unsubscribe | Not applicable | No email or newsletter system exists. |
 | Licensed assets | Implemented | System fonts and original project artwork; open-source runtime licenses documented and packaged. |
 | Data access/export/deletion | Implemented | Local JSON export, database backup, task/session deletion, and confirmed Clear all data. Policy explains that uninstall may leave user data and recommends clearing first. |
-| Installer identity/signing | Accepted risk for current release | Squirrel installs shortcuts and launches the app. V3 is intentionally unsigned for personal and trusted-user distribution; the website, README, and release notes disclose SmartScreen/Unknown publisher behavior and publish SHA-256 checksums. |
+| Installer identity/signing | Accepted risk for current release | Squirrel installs shortcuts and launches the app. V3.0.1 aligns the runtime and shortcut AppUserModelID and embeds the Rurinagi icon. It remains intentionally unsigned for personal and trusted-user distribution; the website, README, and release notes disclose SmartScreen/Unknown publisher behavior and publish SHA-256 checksums. |
 
 ## Release follow-ups
 
