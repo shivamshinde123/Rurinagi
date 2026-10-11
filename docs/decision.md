@@ -66,3 +66,9 @@ The setup explains local storage and offers desktop notifications and Start with
 
 Code signing remains required for a trusted public installer but cannot be completed without a publisher certificate and protected signing credentials.
 
+## 2026-10-11 Publish V3 unsigned for personal and trusted distribution
+
+V3 is published without Windows code signing because its present audience is the project owner and other users who independently trust the project. The website, README, and release notes must disclose that Windows may show SmartScreen and an `Unknown publisher` identity, and must provide SHA-256 checksums for download verification.
+
+This is an accepted distribution risk, not a claim that the installer has a verified publisher identity. Code signing remains deferred until the app is distributed broadly or commercially.
+
