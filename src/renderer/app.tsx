@@ -131,7 +131,8 @@ function TimerCard({ state, next, onStart, onFocus }: { state: AppState; next?: 
 }
 
 function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; navigate: (screen: Screen) => void }) {
-  const [selectedId, setSelectedId] = useState<string | null>(state.tasks.find((task) => task.status !== 'archived')?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Task | null>(null);
   const [query, setQuery] = useState('');
   const [creatingTask, setCreatingTask] = useState(false);
   const [taskName, setTaskName] = useState('');
@@ -139,6 +140,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
   const [projectName, setProjectName] = useState('');
   const [confirmation, setConfirmation] = useState<'archive' | 'delete' | null>(null);
   const selected = state.tasks.find((task) => task.id === selectedId);
+  useEffect(() => setDraft(selected ? { ...selected } : null), [selectedId]);
   const visible = state.tasks.filter((task) => task.status !== 'archived' && task.title.toLowerCase().includes(query.toLowerCase()));
   const addTask = (event: FormEvent) => {
     event.preventDefault();
@@ -155,7 +157,12 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
     commit({ ...state, projects: [...state.projects, { id: crypto.randomUUID(), name: name.slice(0, 120), color: '#315F4D' }] }, 'Project created');
     setProjectName(''); setCreatingProject(false);
   };
-  const update = (patch: Partial<Task>) => selected && commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, ...patch } : task) });
+  const update = (patch: Partial<Task>) => setDraft((current) => current ? { ...current, ...patch } : current);
+  const withDraft = (): AppState => !selected || !draft ? state : { ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...draft, title: draft.title.trim(), sortOrder: task.sortOrder } : task) };
+  const saveDraft = (): void => {
+    if (!draft?.title.trim()) return;
+    commit(withDraft(), 'Task updated'); setSelectedId(null);
+  };
   const move = (direction: -1 | 1) => {
     if (!selected) return;
     const ordered = [...state.tasks].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -163,38 +170,39 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
     const other = ordered[from + direction];
     if (!other) return;
     commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, sortOrder: other.sortOrder } : task.id === other.id ? { ...task, sortOrder: selected.sortOrder } : task) }, 'Task order updated');
+    setDraft((current) => current ? { ...current, sortOrder: other.sortOrder } : current);
   };
   const groups = [['Today', visible.filter((task) => task.isToday)], ['Tomorrow', visible.filter((task) => task.dueDate && task.dueDate > localDate() && !task.isToday)], ['Later', visible.filter((task) => !task.isToday && (!task.dueDate || task.dueDate <= localDate()))]] as const;
   return <>
     <PageHeader title="Tasks" subtitle="Keep the list practical. Choose what deserves today." actions={<div className="header-actions"><button className="button secondary" onClick={() => setCreatingProject(true)}>New project</button><button className="button create-action" onClick={() => setCreatingTask(true)}><Icon name="plus" />Add task</button></div>} />
-    <div className="tasks-layout">
+    <div className={`tasks-layout ${selected && draft ? 'with-inspector' : ''}`}>
       <section className="task-browser card">
         <label className="search-field"><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks" aria-label="Search tasks" /></label>
         {groups.map(([label, tasks]) => tasks.length > 0 && <div className="task-group" key={label}><h2>{label}</h2>{tasks.map((task) => <TaskRow key={task.id} task={task} state={state} selected={selectedId === task.id} onToggle={() => commit(toggleTask(state, task))} onOpen={() => setSelectedId(task.id)} />)}</div>)}
         {visible.length === 0 && <Empty title="Nothing needs your attention." body="Create a task or change the search." />}
       </section>
-      <aside className={`inspector card ${selected ? 'open' : ''}`}>
-        {selected ? <>
+      {selected && draft && <aside className="inspector card open">
+        <>
           <div className="section-label">Task details</div>
-          <input className="title-input" value={selected.title} aria-label="Task title" onChange={(event) => update({ title: event.target.value })} />
-          <Field label="Project"><SelectControl ariaLabel="Project" value={selected.projectId ?? ''} onChange={(value) => update({ projectId: value || null })} options={[{ value: '', label: 'Inbox' }, ...state.projects.map((project) => ({ value: project.id, label: project.name }))]} /></Field>
-          <Field label="Notes"><textarea value={selected.description} onChange={(event) => update({ description: event.target.value })} placeholder="Add a useful next step…" /></Field>
-          <div className="field-grid"><Field label="Planned date"><input type="date" value={selected.dueDate ?? ''} onChange={(event) => update({ dueDate: event.target.value || null })} /></Field><Field label="Sessions"><input type="number" min="1" max="20" value={selected.estimateSessions} onChange={(event) => update({ estimateSessions: boundedInt(event.target.value, 1, 20) })} /></Field></div>
-          <div className="field-grid"><Field label="Priority"><SelectControl ariaLabel="Priority" value={selected.priority} onChange={(value) => update({ priority: value as Priority })} options={[{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }]} /></Field><Field label="Status"><SelectControl ariaLabel="Status" value={selected.status} onChange={(value) => update({ status: value as TaskStatus })} options={[{ value: 'inbox', label: 'Inbox' }, { value: 'planned', label: 'Planned' }, { value: 'waiting', label: 'Waiting' }, { value: 'complete', label: 'Complete' }]} /></Field></div>
-          <label className="switch-row"><input type="checkbox" checked={selected.isToday} onChange={(event) => update({ isToday: event.target.checked, status: event.target.checked ? 'planned' : selected.status })} /><span>Priority for today</span></label>
+          <input className="title-input" value={draft.title} aria-label="Task title" onChange={(event) => update({ title: event.target.value })} />
+          <Field label="Project"><SelectControl ariaLabel="Project" value={draft.projectId ?? ''} onChange={(value) => update({ projectId: value || null })} options={[{ value: '', label: 'Inbox' }, ...state.projects.map((project) => ({ value: project.id, label: project.name }))]} /></Field>
+          <Field label="Notes"><textarea value={draft.description} onChange={(event) => update({ description: event.target.value })} placeholder="Add a useful next step…" /></Field>
+          <div className="field-grid"><Field label="Planned date"><input type="date" value={draft.dueDate ?? ''} onChange={(event) => update({ dueDate: event.target.value || null })} /></Field><Field label="Sessions"><input type="number" min="1" max="20" value={draft.estimateSessions} onChange={(event) => update({ estimateSessions: boundedInt(event.target.value, 1, 20) })} /></Field></div>
+          <div className="field-grid"><Field label="Priority"><SelectControl ariaLabel="Priority" value={draft.priority} onChange={(value) => update({ priority: value as Priority })} options={[{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }]} /></Field><Field label="Status"><SelectControl ariaLabel="Status" value={draft.status} onChange={(value) => update({ status: value as TaskStatus })} options={[{ value: 'inbox', label: 'Inbox' }, { value: 'planned', label: 'Planned' }, { value: 'waiting', label: 'Waiting' }, { value: 'complete', label: 'Complete' }]} /></Field></div>
+          <label className="switch-row"><input type="checkbox" checked={draft.isToday} onChange={(event) => update({ isToday: event.target.checked, status: event.target.checked ? 'planned' : draft.status })} /><span>Priority for today</span></label>
           <div className="reorder-actions"><button className="button quiet" onClick={() => move(-1)}>Move up</button><button className="button quiet" onClick={() => move(1)}>Move down</button></div>
-          <div className="primary-task-actions"><button className="button primary focus-action" onClick={() => { commit(startFocus(state, selected.id)); navigate('focus'); }}><Icon name="play" />Start focus</button><button className="button create-action" onClick={() => setCreatingTask(true)}><Icon name="plus" />Add task</button></div>
+          <div className="primary-task-actions"><button className="button primary focus-action" disabled={!draft.title.trim()} onClick={() => { commit(startFocus(withDraft(), selected.id)); navigate('focus'); }}><Icon name="play" />Start focus</button><button className="button create-action" disabled={!draft.title.trim()} onClick={saveDraft}><Icon name="check" />Update task</button></div>
           <div className="inspector-actions">
             <button className="button quiet" onClick={() => setConfirmation('archive')}>Archive</button>
             <button className="button destructive destructive-outline" disabled={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status)} title={state.timer.taskId === selected.id && ['running', 'paused'].includes(state.timer.status) ? 'End the active focus session before deleting this task' : 'Permanently delete task'} onClick={() => setConfirmation('delete')}>Delete</button>
           </div>
-        </> : <Empty title="Select a task" body="Details and actions will appear here." />}
-      </aside>
+        </>
+      </aside>}
     </div>
     {creatingTask && <Modal title="Add a task" onClose={() => { setCreatingTask(false); setTaskName(''); }}><form onSubmit={addTask}><Field label="Task name"><input autoFocus value={taskName} maxLength={500} placeholder="What needs your attention?" onChange={(event) => setTaskName(event.target.value)} /></Field><div className="modal-actions"><button className="button primary" type="submit" disabled={!taskName.trim()}>Create task</button><button className="button quiet" type="button" onClick={() => { setCreatingTask(false); setTaskName(''); }}>Cancel</button></div></form></Modal>}
     {creatingProject && <Modal title="New project" onClose={() => setCreatingProject(false)}><form onSubmit={addProject}><Field label="Project name"><input autoFocus value={projectName} maxLength={120} onChange={(event) => setProjectName(event.target.value)} /></Field><div className="modal-actions"><button className="button primary" type="submit" disabled={!projectName.trim()}>Create project</button><button className="button quiet" type="button" onClick={() => setCreatingProject(false)}>Cancel</button></div></form></Modal>}
-    {confirmation === 'archive' && selected && <ConfirmModal title="Archive this task?" body="It will leave your active lists, while its focus history stays available." confirmLabel="Archive task" onClose={() => setConfirmation(null)} onConfirm={() => { commit({ ...state, tasks: state.tasks.map((task) => task.id === selected.id ? { ...task, status: 'archived' } : task) }, 'Task archived'); setSelectedId(null); setConfirmation(null); }} />}
-    {confirmation === 'delete' && selected && <ConfirmModal title="Delete this task permanently?" body={`“${selected.title}” will be removed. Focus history will be kept. This cannot be undone.`} confirmLabel="Delete task" destructive onClose={() => setConfirmation(null)} onConfirm={() => { commit({ ...state, tasks: state.tasks.filter((task) => task.id !== selected.id) }, 'Task deleted'); setSelectedId(null); setConfirmation(null); }} />}
+    {confirmation === 'archive' && selected && draft && <ConfirmModal title="Archive this task?" body="It will leave your active lists, while its focus history stays available." confirmLabel="Archive task" onClose={() => setConfirmation(null)} onConfirm={() => { const next = withDraft(); commit({ ...next, tasks: next.tasks.map((task) => task.id === selected.id ? { ...task, status: 'archived' } : task) }, 'Task archived'); setSelectedId(null); setConfirmation(null); }} />}
+    {confirmation === 'delete' && selected && draft && <ConfirmModal title="Delete this task permanently?" body={`“${draft.title}” will be removed. Focus history will be kept. This cannot be undone.`} confirmLabel="Delete task" destructive onClose={() => setConfirmation(null)} onConfirm={() => { commit({ ...state, tasks: state.tasks.filter((task) => task.id !== selected.id) }, 'Task deleted'); setSelectedId(null); setConfirmation(null); }} />}
   </>;
 }
 

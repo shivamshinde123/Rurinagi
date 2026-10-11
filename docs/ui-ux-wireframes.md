@@ -35,7 +35,7 @@ Greeting and supportive prompt
 
 ## Tasks
 
-Grouped task list occupies the main area. Add task opens a focused naming dialog with Create task and Cancel actions; no placeholder task is inserted. Selecting a created task opens a right-side inspector from the same edge in both directions. Empty groups use concise, actionable text. The inspector separates non-destructive Archive from confirmed permanent Delete; Delete preserves focus-history records and is disabled for a live timer.
+The grouped task list occupies the full main area until a task is selected. Add task opens a focused naming dialog with Create task and Cancel actions; no placeholder task is inserted. Selecting or creating a task reveals the right-side inspector. Its fields edit a draft, and Update task saves that draft and closes the inspector. Empty groups use concise, actionable text. The inspector separates non-destructive Archive from confirmed permanent Delete; Delete preserves focus-history records and is disabled for a live timer.
 
 ## Focus
 
@@ -53,7 +53,7 @@ A compact summary precedes a chronological, keyboard-readable session list. Stat
 
 Settings use labeled rows grouped under Timer, Appearance, Behavior, Data and privacy, and About. Destructive data clearing sits last and requires confirmation.
 
-Dropdowns use app-rendered listboxes with the same rounded surfaces, green focus treatment, spacing, selected-state checkmarks, and chevrons as the rest of the app. They support pointer, arrow-key, Enter, Escape, and focus dismissal behavior. Task creation is a soft-green action placed beside the emphasized filled Start focus action in the inspector.
+Dropdowns use app-rendered listboxes with the same rounded surfaces, green focus treatment, spacing, selected-state checkmarks, and chevrons as the rest of the app. They support pointer, arrow-key, Enter, Escape, and focus dismissal behavior. Update task is a soft-green action placed beside the emphasized filled Start focus action in the inspector.
 
 Destructive and archival confirmations appear as centered Rurinagi dialogs with clear consequences, explicit action labels, Cancel, focus treatment, and outside-click dismissal.
 
