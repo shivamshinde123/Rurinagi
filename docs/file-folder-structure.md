@@ -13,9 +13,12 @@ Rurinagi/
     shared/
       domain.ts             Shared V1 domain model and timer logic
   tests/                   Pure domain behavior tests
+    e2e/                   Packaged Electron workflow coverage
+  site/                    Static GitHub Pages product site
+  .github/workflows/       Verified release and Pages automation
   forge.config.ts          Desktop packaging configuration
   vite.*.config.ts         Process-specific Vite configuration
 ```
 
-Generated output belongs in `dist/` or `out/` and is not committed.
+Generated output belongs in `dist/` or `out/` and is not committed. The Pages workflow injects compiled downloads into a temporary `site/downloads/` directory during deployment.
 

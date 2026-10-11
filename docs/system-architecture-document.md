@@ -12,6 +12,8 @@ React renderer
       -> Windows notifications, dialogs, shortcut, and windows
 ```
 
+The public GitHub Pages site is a separate static delivery surface. Publishing a GitHub Release triggers its workflow to combine `site/` with the exact tagged Windows assets; application source and user data are never included in the Pages artifact.
+
 ## Boundaries
 
 - Renderer: unprivileged UI with no Node integration.
@@ -26,4 +28,6 @@ The app loads only packaged local content, applies a restrictive Content Securit
 ## Availability
 
 All core behavior works without a network. Running timer recovery is based on persisted timestamps and is performed before state reaches the renderer.
+
+The website requires a network only for distribution. A downloaded application remains fully offline-capable.
 

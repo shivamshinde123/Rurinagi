@@ -90,11 +90,32 @@ export function validateState(input: unknown): AppState {
     if (!isObject(project) || !validId(project.id) || !validText(project.name, 120) || !validText(project.color, 32)) throw new Error('Invalid project record.');
   }
   for (const task of input.tasks) {
-    if (!isObject(task) || !validId(task.id) || !validText(task.title, 500) || !validText(task.description, MAX_TEXT)) throw new Error('Invalid task record.');
+    if (!isObject(task) || !validId(task.id) || !validText(task.title, 500) || !validText(task.description, MAX_TEXT)
+      || !nullableId(task.projectId) || !oneOf(task.priority, ['low', 'normal', 'high'])
+      || !nullableDateOnly(task.dueDate) || !integerBetween(task.estimateSessions, 1, 20)
+      || !oneOf(task.status, ['inbox', 'planned', 'active', 'waiting', 'complete', 'archived'])
+      || !integerBetween(task.sortOrder, 0, 1_000_000) || typeof task.isToday !== 'boolean'
+      || !validDateTime(task.createdAt) || !nullableDateTime(task.completedAt)) throw new Error('Invalid task record.');
   }
   for (const session of input.sessions) {
-    if (!isObject(session) || !validId(session.id) || !validText(session.note, MAX_TEXT)) throw new Error('Invalid session record.');
+    if (!isObject(session) || !validId(session.id) || !nullableId(session.taskId) || !nullableId(session.projectId)
+      || !integerBetween(session.plannedSeconds, 1, 7_200) || !integerBetween(session.actualSeconds, 1, 7_200)
+      || !validDateTime(session.startedAt) || !validDateTime(session.endedAt)
+      || !oneOf(session.outcome, ['completed', 'partial', 'interrupted']) || !validText(session.note, MAX_TEXT)) throw new Error('Invalid session record.');
   }
+  const timer = input.timer;
+  if (!oneOf(timer.mode, ['focus', 'short-break', 'long-break']) || !oneOf(timer.status, ['idle', 'running', 'paused', 'completed'])
+    || !nullableId(timer.taskId) || !integerBetween(timer.durationSeconds, 1, 7_200)
+    || !integerBetween(timer.remainingSeconds, 0, timer.durationSeconds as number)
+    || !nullableDateTime(timer.startedAt) || !nullableDateTime(timer.endsAt)
+    || !integerBetween(timer.cycleCount, 0, 1_000_000)) throw new Error('Invalid timer data.');
+  const settings = input.settings;
+  if (!integerBetween(settings.focusMinutes, 1, 120) || !integerBetween(settings.shortBreakMinutes, 1, 120)
+    || !integerBetween(settings.longBreakMinutes, 1, 120) || !integerBetween(settings.sessionsBeforeLongBreak, 1, 120)
+    || !boolean(settings.autoStartBreaks) || !boolean(settings.notifications) || !boolean(settings.sound)
+    || !oneOf(settings.theme, ['light', 'dark', 'system']) || !boolean(settings.reducedMotion)
+    || !boolean(settings.compactDensity) || !boolean(settings.startWithWindows) || !boolean(settings.confirmDiscard)
+    || !validText(settings.quickCaptureShortcut, 120)) throw new Error('Invalid settings data.');
   if (!validText(input.quickNote, MAX_TEXT) || !validText(input.sessionNote, MAX_TEXT)) throw new Error('Invalid note data.');
   return structuredClone(input) as unknown as AppState;
 }
@@ -109,5 +130,33 @@ function validId(value: unknown): boolean {
 
 function validText(value: unknown, max: number): boolean {
   return typeof value === 'string' && value.length <= max;
+}
+
+function nullableId(value: unknown): boolean {
+  return value === null || validId(value);
+}
+
+function integerBetween(value: unknown, min: number, max: number): boolean {
+  return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
+}
+
+function boolean(value: unknown): boolean {
+  return typeof value === 'boolean';
+}
+
+function oneOf(value: unknown, options: readonly string[]): boolean {
+  return typeof value === 'string' && options.includes(value);
+}
+
+function validDateTime(value: unknown): boolean {
+  return typeof value === 'string' && value.length <= 40 && Number.isFinite(Date.parse(value));
+}
+
+function nullableDateTime(value: unknown): boolean {
+  return value === null || validDateTime(value);
+}
+
+function nullableDateOnly(value: unknown): boolean {
+  return value === null || (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value));
 }
 

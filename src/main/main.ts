@@ -73,7 +73,11 @@ function openCapture(): void {
 
 function configureShortcut(shortcut: string): void {
   if (activeShortcut) globalShortcut.unregister(activeShortcut);
-  activeShortcut = globalShortcut.register(shortcut, openCapture) ? shortcut : '';
+  try {
+    activeShortcut = globalShortcut.register(shortcut, openCapture) ? shortcut : '';
+  } catch {
+    activeShortcut = '';
+  }
 }
 
 function broadcastState(): void {

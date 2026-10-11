@@ -5,6 +5,7 @@ out/
 coverage/
 output/
 .playwright-cli/
+site/downloads/
 *.log
 *.sqlite
 *.sqlite-shm
