@@ -27,6 +27,9 @@ SQLite contains migrations plus the current state document. Writes use a transac
 - One process-owned tray instance provides Show Rurinagi, Quick capture, and Quit commands. Closing the main window hides it; only explicit Quit tears down the tray, shortcuts, windows, and storage.
 - Shortcut settings render in Windows-friendly notation but are normalized to Electron accelerator syntax before persistence and registration.
 - `resources/rurinagi-logo.svg` is the brand source of truth. The existing Playwright development dependency reproducibly renders its PNG and multi-resolution ICO derivatives; Electron Forge embeds the ICO and copies the PNG for runtime windows and tray use.
+- Squirrel owns installation, update events, desktop and Start Menu shortcuts, and shortcut cleanup on uninstall. First-run setup is rendered by the installed Rurinagi application rather than a second installer framework.
+- Notification and login-start preferences default off and are persisted only after setup completion or a later Settings change.
+- External navigation is limited to the published Privacy and Terms pages through a main-process URL allowlist.
 
 ## Error handling
 
@@ -34,5 +37,5 @@ Load failures surface an actionable full-screen error. Save failures retain UI s
 
 ## Testing
 
-Pure tests cover timer behavior, startup recovery, weekly boundaries, comparison percentages, project totals, completion rate, and streak behavior. The packaged Electron workflow verifies every screen and the rendered Focus Skyline.
+Pure tests cover timer behavior, startup recovery, weekly boundaries, comparison percentages, project totals, completion rate, streak behavior, privacy-sensitive defaults, and the policy URL allowlist. The packaged Electron workflow verifies first-run setup, ordinary restart behavior, every screen, and the rendered Focus Skyline.
 

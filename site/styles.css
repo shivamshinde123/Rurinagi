@@ -70,3 +70,18 @@ footer { max-width: 1240px; margin: auto; padding: 4rem 1.5rem; display: flex; a
 @media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; }.reveal { opacity: 1; transform: none; transition: none; }.button { transition: none; }.capture-demo p span { animation: none; } }
 @media (prefers-reduced-transparency: reduce) { .nav, .mock-card, .feature { backdrop-filter: none; background-color: #fff; } }
 @media (prefers-contrast: more) { :root { --line: rgba(0,0,0,.45); }.nav, .feature, .mock-card { border-color: var(--line); } }
+
+.privacy-link { color: #b9ddc9; }
+.legal-links { display: flex; gap: 1rem; }
+.legal-links a, .legal-footer a { color: inherit; text-decoration: none; }
+.legal-links a:hover, .legal-footer a:hover { text-decoration: underline; text-underline-offset: .2rem; }
+.legal-page { color: #20241f; background: #f4f4f1; }
+.legal-nav { max-width: 920px; margin: auto; padding: 1.5rem clamp(1.25rem, 4vw, 3rem); display: flex; align-items: center; justify-content: space-between; }
+.legal-nav > a:last-child { color: #315f4d; font-weight: 700; text-decoration: none; }
+.legal-document { max-width: 760px; margin: 4rem auto 7rem; padding: 0 clamp(1.25rem, 4vw, 3rem); }
+.legal-document h1 { margin: .55rem 0 .6rem; font-size: clamp(3rem, 8vw, 5.5rem); line-height: .96; letter-spacing: -.06em; }
+.legal-document h2 { margin: 2.6rem 0 .55rem; font-size: 1.35rem; letter-spacing: -.025em; }
+.legal-document p, .legal-document li { color: #555c54; font-size: 1.04rem; line-height: 1.75; }
+.legal-document a { color: #315f4d; font-weight: 650; }
+.legal-meta { margin-top: 0; }
+.legal-footer { max-width: 920px; margin: auto; padding: 1.5rem clamp(1.25rem, 4vw, 3rem); display: flex; justify-content: space-between; border-top: 1px solid rgba(49,95,77,.16); color: #656b64; }

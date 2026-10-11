@@ -18,6 +18,7 @@
 V3 keeps the connected screen components together in `src/renderer/app.tsx` because they share one small state boundary. Split them only when independent ownership or reuse appears.
 
 - `App`: loads state, coordinates persistence, navigation, theme, and window mode.
+- `FirstRunSetup`: two-step local-privacy explanation and explicit notification/startup preferences shown once per Windows profile.
 - `Sidebar`: primary navigation and quick capture entry point.
 - `Today`: priority selection, next task, daily tasks, summary, and quick note.
 - `Tasks`: validated named-task creation, grouping, completion, ordering, contextual draft-backed inspector editing, non-destructive archive, and confirmed permanent deletion that preserves session history.
@@ -26,6 +27,7 @@ V3 keeps the connected screen components together in `src/renderer/app.tsx` beca
 - `Insights`: seven-day focus summary, weekly comparison, project distribution, and current/longest streaks.
 - `FocusSkyline`: dependency-free, accessible seven-column visualization derived from `FocusDay` values.
 - `SettingsScreen`: timer, appearance, behavior, and local-data controls.
+- `policyUrls` / `isAllowedPolicyUrl`: shared exact allowlist used by the renderer and main process for external Privacy and Terms navigation.
 - `QuickCapture`: focused, progressive task capture window.
 - `ProgressRing`, `TaskRow`, `SessionRow`, and `Icon`: small shared presentation components in the same module.
 - `SelectControl`: reusable themed listbox used by task editing, Quick Capture, History filters, session reassignment, and Settings.

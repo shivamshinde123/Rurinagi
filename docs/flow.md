@@ -6,7 +6,12 @@
 2. Storage opens SQLite, applies migrations, and creates initial state if needed.
 3. Startup recovery finalizes an elapsed running focus timer or transitions an elapsed break to idle.
 4. The main window loads the local renderer with context isolation and sandboxing enabled.
-5. React calls `loadState` through the preload bridge and renders Today.
+5. React calls `loadState` through the preload bridge.
+6. A new profile sees first-run setup. Finishing it persists the selected notification and startup preferences, records local setup completion, and renders Today. Returning profiles render Today directly.
+
+## Policy links
+
+The renderer requests a published Privacy or Terms URL through the preload bridge. The main process checks it against the exact shared allowlist before asking Windows to open the default browser. Arbitrary renderer-provided URLs are rejected.
 
 ## State changes
 

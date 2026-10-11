@@ -2,8 +2,10 @@ import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'reac
 import {
   AppState, FocusDay, Priority, Project, Screen, Session, Settings, Task, TaskStatus,
   buildFocusInsights, discardTimer, finishTimer, focusedSecondsToday, formatDuration, localDate,
-  pauseTimer, remainingSeconds, resumeTimer, startBreak, startFocus,
+  pauseTimer, policyUrls, remainingSeconds, resumeTimer, startBreak, startFocus,
 } from '../shared/domain';
+
+const setupStorageKey = 'rurinagi:first-run-complete';
 
 const screens: { id: Screen; label: string; icon: IconName }[] = [
   { id: 'today', label: 'Today', icon: 'sun' },
@@ -19,15 +21,22 @@ export function App() {
   const [screen, setScreen] = useState<Screen>('today');
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
+  const [setupComplete, setSetupComplete] = useState(() => localStorage.getItem(setupStorageKey) === '1');
   const capture = location.hash === '#capture';
 
   const reload = () => window.rurinagi.loadState().then(setState).catch((cause: unknown) => setError(message(cause)));
   useEffect(() => { void reload(); return window.rurinagi.onStateChanged(reload); }, []);
 
-  const commit = (next: AppState, notice?: string) => {
+  const commit = async (next: AppState, notice?: string): Promise<boolean> => {
     setState(next);
     if (notice) setToast(notice);
-    void window.rurinagi.saveState(next).catch((cause: unknown) => setToast(`Couldn't save: ${message(cause)}`));
+    try {
+      await window.rurinagi.saveState(next);
+      return true;
+    } catch (cause) {
+      setToast(`Couldn't save: ${message(cause)}`);
+      return false;
+    }
   };
 
   useEffect(() => {
@@ -45,6 +54,7 @@ export function App() {
   if (error) return <main className="fatal"><Logo /><h1>Rurinagi couldn’t open</h1><p>{error}</p><button className="button primary" onClick={() => location.reload()}>Try again</button></main>;
   if (!state) return <main className="loading"><Logo /><p>Opening your day…</p></main>;
   if (capture) return <QuickCapture state={state} commit={commit} />;
+  if (!setupComplete) return <FirstRunSetup state={state} commit={commit} onComplete={() => setSetupComplete(true)} />;
 
   return (
     <div className="app-shell">
@@ -63,6 +73,44 @@ export function App() {
       {toast && <div className="toast" role="status"><Icon name="check" />{toast}</div>}
     </div>
   );
+}
+
+function FirstRunSetup({ state, commit, onComplete }: { state: AppState; commit: Commit; onComplete: () => void }) {
+  const [step, setStep] = useState(0);
+  const [notifications, setNotifications] = useState(false);
+  const [startWithWindows, setStartWithWindows] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const finish = async (): Promise<void> => {
+    setSaveError('');
+    const saved = await commit({ ...state, settings: { ...state.settings, notifications, startWithWindows } });
+    if (!saved) { setSaveError('Rurinagi could not save these choices. Please try again.'); return; }
+    localStorage.setItem(setupStorageKey, '1');
+    onComplete();
+  };
+  return <main className="setup-shell">
+    <section className="setup-card" aria-labelledby="setup-title">
+      <div className="setup-brand"><Logo /><span>Rurinagi</span></div>
+      <div className="setup-progress" aria-label={`Setup step ${step + 1} of 2`}><span className="active" /><span className={step === 1 ? 'active' : ''} /></div>
+      {step === 0 ? <>
+        <p className="section-label">Welcome</p>
+        <h1 id="setup-title">A calmer place for meaningful work.</h1>
+        <p className="setup-lede">Rurinagi works locally on this computer. There is no account, analytics, advertising, or cloud database.</p>
+        <div className="setup-privacy"><span className="status-dot" /><div><strong>Your work stays with you</strong><p>Tasks, notes, settings, and focus history are stored in a local SQLite database. You can export, back up, or delete them from Settings.</p></div></div>
+        <div className="policy-links"><button className="text-button" onClick={() => void window.rurinagi.openExternal(policyUrls.privacy)}>Privacy Policy</button><button className="text-button" onClick={() => void window.rurinagi.openExternal(policyUrls.terms)}>Terms of Service</button></div>
+        <button className="button primary large setup-next" autoFocus onClick={() => setStep(1)}>Continue</button>
+      </> : <>
+        <p className="section-label">Preferences</p>
+        <h1 id="setup-title">Make Rurinagi yours.</h1>
+        <p className="setup-lede">Both choices are optional and can be changed later in Settings.</p>
+        <div className="setup-options">
+          <SettingToggle label="Desktop notifications" description="Show a Windows notification when a focus session finishes." checked={notifications} onChange={setNotifications} />
+          <SettingToggle label="Start with Windows" description="Keep quick capture and the tray icon ready after you sign in." checked={startWithWindows} onChange={setStartWithWindows} />
+        </div>
+        {saveError && <p className="setup-error" role="alert">{saveError}</p>}
+        <div className="setup-actions"><button className="button quiet" onClick={() => setStep(0)}>Back</button><button className="button primary large" autoFocus onClick={() => void finish()}>Finish setup</button></div>
+      </>}
+    </section>
+  </main>;
 }
 
 function Sidebar({ active, onNavigate }: { active: Screen; onNavigate: (screen: Screen) => void }) {
@@ -85,7 +133,7 @@ function Toolbar({ onCapture }: { onCapture: () => void }) {
   return <header className="toolbar"><span>{date}</span><div className="toolbar-actions"><button className="icon-button emphasized" aria-label="Quick capture" title="Quick capture" onClick={onCapture}><Icon name="plus" /></button></div></header>;
 }
 
-type Commit = (state: AppState, notice?: string) => void;
+type Commit = (state: AppState, notice?: string) => Promise<boolean>;
 
 function Today({ state, commit, navigate }: { state: AppState; commit: Commit; navigate: (screen: Screen) => void }) {
   const openTasks = state.tasks.filter((task) => task.isToday && task.status !== 'complete' && task.status !== 'archived').sort((a, b) => a.sortOrder - b.sortOrder);
@@ -320,11 +368,11 @@ function SettingsScreen({ state, commit, setToast }: { state: AppState; commit: 
   return <>
     <PageHeader title="Settings" subtitle="Shape Rurinagi around the way you work." />
     <div className="settings-stack">
-      <SettingsGroup title="Timer"><SettingNumber label="Focus duration" value={state.settings.focusMinutes} suffix="min" onChange={(value) => update({ focusMinutes: value })} /><SettingNumber label="Short break" value={state.settings.shortBreakMinutes} suffix="min" onChange={(value) => update({ shortBreakMinutes: value })} /><SettingNumber label="Long break" value={state.settings.longBreakMinutes} suffix="min" onChange={(value) => update({ longBreakMinutes: value })} /><SettingNumber label="Sessions before long break" value={state.settings.sessionsBeforeLongBreak} onChange={(value) => update({ sessionsBeforeLongBreak: value })} /><SettingToggle label="Start breaks automatically" checked={state.settings.autoStartBreaks} onChange={(checked) => update({ autoStartBreaks: checked })} /><SettingToggle label="Desktop notifications" checked={state.settings.notifications} onChange={(checked) => update({ notifications: checked })} /><SettingToggle label="Completion sound" checked={state.settings.sound} onChange={(checked) => update({ sound: checked })} /></SettingsGroup>
+      <SettingsGroup title="Timer"><SettingNumber label="Focus duration" value={state.settings.focusMinutes} suffix="min" onChange={(value) => update({ focusMinutes: value })} /><SettingNumber label="Short break" value={state.settings.shortBreakMinutes} suffix="min" onChange={(value) => update({ shortBreakMinutes: value })} /><SettingNumber label="Long break" value={state.settings.longBreakMinutes} suffix="min" onChange={(value) => update({ longBreakMinutes: value })} /><SettingNumber label="Sessions before long break" value={state.settings.sessionsBeforeLongBreak} onChange={(value) => update({ sessionsBeforeLongBreak: value })} /><SettingToggle label="Start breaks automatically" checked={state.settings.autoStartBreaks} onChange={(checked) => update({ autoStartBreaks: checked })} /><SettingToggle label="Desktop notifications" description="Show a Windows notification when a focus session finishes." checked={state.settings.notifications} onChange={(checked) => update({ notifications: checked })} /><SettingToggle label="Completion sound" checked={state.settings.sound} onChange={(checked) => update({ sound: checked })} /></SettingsGroup>
       <SettingsGroup title="Appearance"><div className="setting-row"><div><strong>Theme</strong><small>Match your workspace.</small></div><SelectControl ariaLabel="Theme" value={state.settings.theme} onChange={(value) => update({ theme: value as Settings['theme'] })} options={[{ value: 'system', label: 'Follow system' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} /></div><SettingToggle label="Reduce motion" checked={state.settings.reducedMotion} onChange={(checked) => update({ reducedMotion: checked })} /><SettingToggle label="Compact density" checked={state.settings.compactDensity} onChange={(checked) => update({ compactDensity: checked })} /></SettingsGroup>
-      <SettingsGroup title="Behavior"><SettingToggle label="Start with Windows" checked={state.settings.startWithWindows} onChange={(checked) => update({ startWithWindows: checked })} /><SettingToggle label="Confirm before discarding a session" checked={state.settings.confirmDiscard} onChange={(checked) => update({ confirmDiscard: checked })} /><ShortcutInput value={state.settings.quickCaptureShortcut} onChange={(quickCaptureShortcut) => update({ quickCaptureShortcut })} /></SettingsGroup>
-      <SettingsGroup title="Data and privacy"><p className="privacy-copy">Your tasks and focus history are stored locally on this device.</p><div className="data-actions"><button className="button secondary" onClick={() => void action('export')}>Export data</button><button className="button secondary" onClick={() => void action('import')}>Import data</button><button className="button secondary" onClick={() => void action('backup')}>Back up database</button></div><button className="button destructive quiet" onClick={() => setConfirmClear(true)}>Clear all data</button></SettingsGroup>
-      <SettingsGroup title="About"><div className="about-row"><Logo /><div><strong>Rurinagi</strong><small>Version 3.0.0 · Private by design</small></div></div></SettingsGroup>
+      <SettingsGroup title="Behavior"><SettingToggle label="Start with Windows" description="Launch Rurinagi after you sign in to Windows." checked={state.settings.startWithWindows} onChange={(checked) => update({ startWithWindows: checked })} /><SettingToggle label="Confirm before discarding a session" checked={state.settings.confirmDiscard} onChange={(checked) => update({ confirmDiscard: checked })} /><ShortcutInput value={state.settings.quickCaptureShortcut} onChange={(quickCaptureShortcut) => update({ quickCaptureShortcut })} /></SettingsGroup>
+      <SettingsGroup title="Data and privacy"><p className="privacy-copy">Your tasks and focus history are stored locally on this device.</p><div className="data-actions"><button className="button secondary" onClick={() => void action('export')}>Export data</button><button className="button secondary" onClick={() => void action('import')}>Import data</button><button className="button secondary" onClick={() => void action('backup')}>Back up database</button></div><div className="policy-links settings-policy-links"><button className="text-button" onClick={() => void window.rurinagi.openExternal(policyUrls.privacy)}>Privacy Policy</button><button className="text-button" onClick={() => void window.rurinagi.openExternal(policyUrls.terms)}>Terms of Service</button></div><button className="button destructive quiet" onClick={() => setConfirmClear(true)}>Clear all data</button></SettingsGroup>
+      <SettingsGroup title="About"><div className="about-row"><Logo /><div><strong>Rurinagi</strong><small>Version 3.0.0 · Published by Shivam D Shinde</small></div></div></SettingsGroup>
     </div>
     {confirmClear && <ConfirmModal title="Clear all local data?" body="Every task, project, focus record, and note will be permanently removed. This cannot be undone." confirmLabel="Clear all data" destructive onClose={() => setConfirmClear(false)} onConfirm={() => { void window.rurinagi.clearData().then((next) => { commit(next, 'All local data cleared'); setConfirmClear(false); }).catch((cause: unknown) => setToast(`Clear failed: ${message(cause)}`)); }} />}
   </>;
@@ -366,7 +414,7 @@ function Empty({ title, body, action }: { title: string; body: string; action?: 
 function Metric({ value, label }: { value: string; label: string }) { return <div className="metric"><strong>{value}</strong><span>{label}</span></div>; }
 function Field({ label, children }: { label: string; children: ReactNode }) { return <label className="field"><span>{label}</span>{children}</label>; }
 function SettingsGroup({ title, children }: { title: string; children: ReactNode }) { return <section className="settings-group"><h2>{title}</h2><div className="card">{children}</div></section>; }
-function SettingToggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) { return <label className="setting-row"><div><strong>{label}</strong></div><span className="toggle"><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span /></span></label>; }
+function SettingToggle({ label, description, checked, onChange }: { label: string; description?: string; checked: boolean; onChange: (checked: boolean) => void }) { return <label className="setting-row"><div><strong>{label}</strong>{description && <small>{description}</small>}</div><span className="toggle"><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span /></span></label>; }
 function SettingNumber({ label, value, suffix, onChange }: { label: string; value: number; suffix?: string; onChange: (value: number) => void }) { return <label className="setting-row"><div><strong>{label}</strong></div><span className="number-setting"><input type="number" min="1" max="120" value={value} onChange={(event) => onChange(boundedInt(event.target.value, 1, 120))} />{suffix && <small>{suffix}</small>}</span></label>; }
 function ShortcutInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [draft, setDraft] = useState(formatShortcut(value));

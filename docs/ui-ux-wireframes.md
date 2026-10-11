@@ -22,6 +22,26 @@ The sidebar is a translucent structural layer. Content cards stay solid for legi
 
 The brand mark is two calm current lines inside a green rounded square. It must remain recognizable at 16 px, contain no text, and use the same silhouette in the app, taskbar, tray, installer, and website favicon.
 
+## First-run setup
+
+```text
++--------------------------------------------------+
+| Rurinagi                            Step 1 of 2  |
+| A calmer place for meaningful work.              |
+| Local-only privacy explanation                   |
+| Privacy Policy   Terms of Service       Continue |
++--------------------------------------------------+
+
++--------------------------------------------------+
+| Make Rurinagi yours.                Step 2 of 2  |
+| Desktop notifications                         off|
+| Start with Windows                            off|
+| Back                                  Finish setup|
++--------------------------------------------------+
+```
+
+Setup is a focused full-window surface shown only on first launch. It uses system typography, the established green palette, direct labels, and no preselected optional permissions. Policy links are informative; Finish setup does not claim bundled consent to unrelated processing.
+
 ## Today
 
 ```text
@@ -71,6 +91,8 @@ The skyline uses the established green palette, restrained bar entrance motion, 
 ## Settings
 
 Settings use labeled rows grouped under Timer, Appearance, Behavior, Data and privacy, and About. Destructive data clearing sits last and requires confirmation.
+
+Data and privacy also exposes full Privacy Policy and Terms links. About identifies the publisher.
 
 Dropdowns use app-rendered listboxes with the same rounded surfaces, green focus treatment, spacing, selected-state checkmarks, and chevrons as the rest of the app. They support pointer, arrow-key, Enter, Escape, and focus dismissal behavior. Update task is a soft-green action placed beside the emphasized filled Start focus action in the inspector.
 
