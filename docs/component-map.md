@@ -27,5 +27,6 @@ V2 keeps the connected screen components together in `src/renderer/app.tsx` beca
 - `QuickCapture`: focused, progressive task capture window.
 - `ProgressRing`, `TaskRow`, `SessionRow`, and `Icon`: small shared presentation components in the same module.
 - `SelectControl`: reusable themed listbox used by task editing, Quick Capture, History filters, session reassignment, and Settings.
+- `CalendarControl`: reusable themed planned-date picker used by task editing and Quick Capture while preserving local `YYYY-MM-DD` values.
 - `ConfirmModal`: reusable in-app confirmation surface for archive and destructive actions.
 

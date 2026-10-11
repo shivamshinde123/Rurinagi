@@ -40,6 +40,11 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     await page.getByLabel('Sessions').fill('3');
     await chooseOption(page, 'Priority', 'High');
     await chooseOption(page, 'Status', 'Waiting');
+    assert.equal(await page.locator('input[type="date"]').count(), 0);
+    await page.getByRole('button', { name: 'Planned date', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Planned date calendar' }).waitFor();
+    await page.getByRole('dialog', { name: 'Planned date calendar' }).press('Escape');
+    assert.equal(await page.getByRole('dialog', { name: 'Planned date calendar' }).count(), 0);
     await page.getByLabel('Priority for today').check();
     await page.getByRole('button', { name: 'Move up' }).click();
 
@@ -86,7 +91,9 @@ test('packaged Electron app completes every V2 workflow', { timeout: 180_000 }, 
     const capture = await capturePromise;
     await capture.getByPlaceholder('Write a task, idea, or next step').fill('Captured release task');
     await chooseOption(capture, 'Project', 'Release');
-    await capture.getByLabel('Planned date').fill(today);
+    assert.equal(await capture.locator('input[type="date"]').count(), 0);
+    await capture.getByRole('button', { name: 'Planned date', exact: true }).click();
+    await capture.getByRole('gridcell', { name: `Choose ${today}`, exact: true }).click();
     await chooseOption(capture, 'Estimated sessions', '2 sessions');
     await capture.getByRole('button', { name: 'Save task' }).click();
 

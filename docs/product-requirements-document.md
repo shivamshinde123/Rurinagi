@@ -19,7 +19,7 @@ The primary user is an individual Windows user managing personal work such as jo
 - Settings controls timer durations, break behavior, notifications, theme, reduced motion, startup behavior, backup, import, export, and deletion.
 - Closing the main window keeps Rurinagi available in the system tray, whose menu can restore the app, open Quick Capture, or quit.
 - The app uses the product website's green visual identity and keeps project metadata clearly spaced.
-- Task creation and focus initiation have distinct visual hierarchy, task edits use an explicit Update task action, and dropdown menus match the application theme.
+- Task creation and focus initiation have distinct visual hierarchy, task edits use an explicit Update task action, and dropdown and calendar controls match the application theme.
 
 ## Acceptance criteria
 
@@ -35,6 +35,7 @@ The primary user is an individual Windows user managing personal work such as jo
 - Archive, task deletion, session deletion, and clearing all data use consistent in-app confirmation dialogs.
 - Add task opens a focused name field and creates nothing until a non-empty name is submitted.
 - The task inspector is absent until a task is selected or created; Update task saves the draft and closes it.
+- Planned dates use the app-rendered calendar in Task Details and Quick Capture, with month navigation, Today, Clear, keyboard navigation, and local `YYYY-MM-DD` storage.
 
 ## Out of scope
 

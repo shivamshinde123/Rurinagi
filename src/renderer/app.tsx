@@ -187,7 +187,7 @@ function Tasks({ state, commit, navigate }: { state: AppState; commit: Commit; n
           <input className="title-input" value={draft.title} aria-label="Task title" onChange={(event) => update({ title: event.target.value })} />
           <Field label="Project"><SelectControl ariaLabel="Project" value={draft.projectId ?? ''} onChange={(value) => update({ projectId: value || null })} options={[{ value: '', label: 'Inbox' }, ...state.projects.map((project) => ({ value: project.id, label: project.name }))]} /></Field>
           <Field label="Notes"><textarea value={draft.description} onChange={(event) => update({ description: event.target.value })} placeholder="Add a useful next step…" /></Field>
-          <div className="field-grid"><Field label="Planned date"><input type="date" value={draft.dueDate ?? ''} onChange={(event) => update({ dueDate: event.target.value || null })} /></Field><Field label="Sessions"><input type="number" min="1" max="20" value={draft.estimateSessions} onChange={(event) => update({ estimateSessions: boundedInt(event.target.value, 1, 20) })} /></Field></div>
+          <div className="field-grid"><Field label="Planned date"><CalendarControl ariaLabel="Planned date" value={draft.dueDate ?? ''} onChange={(value) => update({ dueDate: value || null })} /></Field><Field label="Sessions"><input type="number" min="1" max="20" value={draft.estimateSessions} onChange={(event) => update({ estimateSessions: boundedInt(event.target.value, 1, 20) })} /></Field></div>
           <div className="field-grid"><Field label="Priority"><SelectControl ariaLabel="Priority" value={draft.priority} onChange={(value) => update({ priority: value as Priority })} options={[{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }]} /></Field><Field label="Status"><SelectControl ariaLabel="Status" value={draft.status} onChange={(value) => update({ status: value as TaskStatus })} options={[{ value: 'inbox', label: 'Inbox' }, { value: 'planned', label: 'Planned' }, { value: 'waiting', label: 'Waiting' }, { value: 'complete', label: 'Complete' }]} /></Field></div>
           <label className="switch-row"><input type="checkbox" checked={draft.isToday} onChange={(event) => update({ isToday: event.target.checked, status: event.target.checked ? 'planned' : draft.status })} /><span>Priority for today</span></label>
           <div className="reorder-actions"><button className="button quiet" onClick={() => move(-1)}>Move up</button><button className="button quiet" onClick={() => move(1)}>Move down</button></div>
@@ -290,7 +290,7 @@ function QuickCapture({ state, commit }: { state: AppState; commit: Commit }) {
     const task: Task = { id: crypto.randomUUID(), title: clean, description: '', projectId: projectId || null, priority: 'normal', dueDate: date || null, estimateSessions: estimate, status: date === localDate() ? 'planned' : 'inbox', sortOrder: state.tasks.length, isToday: date === localDate(), createdAt: new Date().toISOString(), completedAt: null };
     commit({ ...state, tasks: [...state.tasks, task] }, 'Captured'); setTitle(''); void window.rurinagi.completeCapture();
   };
-  return <main className="capture-window"><div className="capture-brand"><Logo /><span>Quick capture</span></div><form onSubmit={submit}><label className="capture-title"><span>What needs your attention?</span><input autoFocus value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Write a task, idea, or next step" /></label><div className="capture-fields"><SelectControl ariaLabel="Project" value={projectId} onChange={setProjectId} options={[{ value: '', label: 'Inbox' }, ...state.projects.map((project) => ({ value: project.id, label: project.name }))]} /><input aria-label="Planned date" type="date" value={date} onChange={(event) => setDate(event.target.value)} /><SelectControl ariaLabel="Estimated sessions" value={String(estimate)} onChange={(value) => setEstimate(Number(value))} options={[1, 2, 3, 4].map((value) => ({ value: String(value), label: `${value} session${value === 1 ? '' : 's'}` }))} /></div><div className="capture-footer"><span><kbd>Enter</kbd> to save</span><button className="button primary" disabled={!title.trim()} type="submit">Save task</button></div></form></main>;
+  return <main className="capture-window"><div className="capture-brand"><Logo /><span>Quick capture</span></div><form onSubmit={submit}><label className="capture-title"><span>What needs your attention?</span><input autoFocus value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Write a task, idea, or next step" /></label><div className="capture-fields"><SelectControl ariaLabel="Project" value={projectId} onChange={setProjectId} options={[{ value: '', label: 'Inbox' }, ...state.projects.map((project) => ({ value: project.id, label: project.name }))]} /><CalendarControl ariaLabel="Planned date" value={date} onChange={setDate} /><SelectControl ariaLabel="Estimated sessions" value={String(estimate)} onChange={(value) => setEstimate(Number(value))} options={[1, 2, 3, 4].map((value) => ({ value: String(value), label: `${value} session${value === 1 ? '' : 's'}` }))} /></div><div className="capture-footer"><span><kbd>Enter</kbd> to save</span><button className="button primary" disabled={!title.trim()} type="submit">Save task</button></div></form></main>;
 }
 
 function TaskRow({ task, state, selected, onToggle, onOpen }: { task: Task; state: AppState; selected?: boolean; onToggle: () => void; onOpen?: () => void }) {
@@ -375,10 +375,52 @@ function SelectControl({ ariaLabel, value, options, onChange }: { ariaLabel: str
     {open && <div className="select-menu" role="listbox" aria-label={ariaLabel} ref={menu}>{options.map((option) => <button type="button" role="option" aria-selected={option.value === value} key={option.value} onClick={() => { onChange(option.value); setOpen(false); trigger.current?.focus(); }} onKeyDown={(event) => { if (event.key === 'ArrowDown') move(event, 1); else if (event.key === 'ArrowUp') move(event, -1); else if (event.key === 'Escape') { setOpen(false); trigger.current?.focus(); } }}>{option.label}{option.value === value && <Icon name="check" />}</button>)}</div>}
   </div>;
 }
+function CalendarControl({ ariaLabel, value, onChange }: { ariaLabel: string; value: string; onChange: (value: string) => void }) {
+  const initialDate = value ? parseLocalDate(value) : new Date();
+  const [open, setOpen] = useState(false);
+  const [viewMonth, setViewMonth] = useState(() => monthStart(initialDate));
+  const [focusedDate, setFocusedDate] = useState(() => dateValue(initialDate));
+  const root = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const popover = useRef<HTMLDivElement>(null);
+  const today = localDate();
+  const days = calendarDays(viewMonth);
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent): void => { if (!root.current?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('pointerdown', close);
+    requestAnimationFrame(() => popover.current?.querySelector<HTMLButtonElement>(`[data-date="${focusedDate}"]`)?.focus());
+    return () => document.removeEventListener('pointerdown', close);
+  }, [open, focusedDate]);
+  const show = (): void => {
+    const date = value ? parseLocalDate(value) : new Date();
+    setViewMonth(monthStart(date)); setFocusedDate(dateValue(date)); setOpen(true);
+  };
+  const select = (next: string): void => { onChange(next); setOpen(false); trigger.current?.focus(); };
+  const focus = (next: Date): void => {
+    const nextValue = dateValue(next);
+    setFocusedDate(nextValue); setViewMonth(monthStart(next));
+    requestAnimationFrame(() => popover.current?.querySelector<HTMLButtonElement>(`[data-date="${nextValue}"]`)?.focus());
+  };
+  const moveFocus = (event: React.KeyboardEvent<HTMLButtonElement>, amount: number): void => { event.preventDefault(); focus(addDays(parseLocalDate(event.currentTarget.dataset.date!), amount)); };
+  const changeMonth = (amount: number): void => { const next = addMonths(viewMonth, amount); setViewMonth(next); setFocusedDate(dateValue(next)); };
+  return <div className={`calendar-control ${open ? 'open' : ''}`} ref={root} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
+    <button ref={trigger} type="button" className="calendar-trigger" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} onClick={() => open ? setOpen(false) : show()} onKeyDown={(event) => { if (event.key === 'ArrowDown') { event.preventDefault(); show(); } }}>{value ? formatCalendarDate(value) : 'Choose date'}<Icon name="calendar" /></button>
+    {open && <div className="calendar-popover" role="dialog" aria-label={`${ariaLabel} calendar`} ref={popover} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); setOpen(false); trigger.current?.focus(); } }}>
+      <div className="calendar-header"><strong>{viewMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</strong><div className="calendar-nav"><button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)}>‹</button><button type="button" aria-label="Next month" onClick={() => changeMonth(1)}>›</button></div></div>
+      <div className="calendar-weekdays" aria-hidden="true">{['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="calendar-grid" role="grid" aria-label="Calendar dates">{days.map((day) => {
+        const dayValue = dateValue(day);
+        return <button type="button" role="gridcell" key={dayValue} data-date={dayValue} tabIndex={dayValue === focusedDate ? 0 : -1} className={`${day.getMonth() === viewMonth.getMonth() ? '' : 'outside'} ${dayValue === today ? 'today' : ''}`} aria-label={`Choose ${dayValue}`} aria-selected={dayValue === value} onClick={() => select(dayValue)} onKeyDown={(event) => { if (event.key === 'ArrowLeft') moveFocus(event, -1); else if (event.key === 'ArrowRight') moveFocus(event, 1); else if (event.key === 'ArrowUp') moveFocus(event, -7); else if (event.key === 'ArrowDown') moveFocus(event, 7); else if (event.key === 'PageUp') { event.preventDefault(); focus(addMonths(day, -1)); } else if (event.key === 'PageDown') { event.preventDefault(); focus(addMonths(day, 1)); } }}>{day.getDate()}</button>;
+      })}</div>
+      <div className="calendar-footer"><button type="button" onClick={() => select('')} disabled={!value}>Clear</button><button type="button" onClick={() => select(today)}>Today</button></div>
+    </div>}
+  </div>;
+}
 function ProjectDot({ project }: { project?: Project }) { return <span className="project-dot" style={{ background: project?.color ?? '#9A9AA1' }} />; }
 function Logo() { return <span className="logo" aria-label="Rurinagi"><svg viewBox="0 0 36 36" role="img"><path d="M7 19c4-7 8-9 12-5 4 4 6 3 10-2" /><path d="M7 24c5-4 9-4 13-1 3 2 6 1 9-2" /></svg></span>; }
 
-type IconName = 'sun' | 'check' | 'timer' | 'history' | 'settings' | 'plus' | 'search' | 'more' | 'play';
+type IconName = 'sun' | 'check' | 'timer' | 'history' | 'settings' | 'plus' | 'search' | 'more' | 'play' | 'calendar';
 function Icon({ name }: { name: IconName }) {
   const paths: Record<IconName, ReactNode> = {
     sun: <><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
@@ -386,6 +428,7 @@ function Icon({ name }: { name: IconName }) {
     history: <><path d="M4 7v5h5" /><path d="M5.5 17a8 8 0 1 0-.8-8" /><path d="M12 8v5l3 2" /></>,
     settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>,
     plus: <path d="M12 5v14M5 12h14" />, search: <><circle cx="11" cy="11" r="6" /><path d="m16 16 5 5" /></>, more: <><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></>, play: <path d="m8 5 11 7-11 7Z" />,
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></>,
   };
   return <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
@@ -396,6 +439,13 @@ function taskById(state: AppState, id: string | null): Task | undefined { return
 function humanMinutes(seconds: number): string { const minutes = Math.round(seconds / 60); return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`; }
 function focusDuration(seconds: number): string { return seconds < 60 ? 'Less than 1m' : humanMinutes(seconds); }
 function boundedInt(value: string, min: number, max: number): number { return Math.min(max, Math.max(min, Number.parseInt(value, 10) || min)); }
+function parseLocalDate(value: string): Date { const [year, month, day] = value.split('-').map(Number); return new Date(year!, month! - 1, day!, 12); }
+function dateValue(date: Date): string { return localDate(date); }
+function monthStart(date: Date): Date { return new Date(date.getFullYear(), date.getMonth(), 1, 12); }
+function addDays(date: Date, amount: number): Date { return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount, 12); }
+function addMonths(date: Date, amount: number): Date { return new Date(date.getFullYear(), date.getMonth() + amount, Math.min(date.getDate(), new Date(date.getFullYear(), date.getMonth() + amount + 1, 0).getDate()), 12); }
+function calendarDays(month: Date): Date[] { const start = addDays(month, -month.getDay()); return Array.from({ length: 42 }, (_, index) => addDays(start, index)); }
+function formatCalendarDate(value: string): string { return parseLocalDate(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
 function formatShortcut(value: string): string { return value.replace(/CommandOrControl|CmdOrCtrl|Control|Ctrl/gi, 'Ctrl').replace(/\s*\+\s*/g, ' + '); }
 function parseShortcut(value: string): string { return value.trim().replace(/\s*\+\s*/g, '+').replace(/^Ctrl(?=\+)/i, 'CommandOrControl'); }
 function formatDay(day: string): string { const date = new Date(`${day}T12:00:00`); return date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); }
